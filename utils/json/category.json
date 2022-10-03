@@ -1,0 +1,20 @@
+[
+  {
+    "title": "Churches",
+    "contentCount": 200,
+    "creationDate": "10-7-2022",
+    "delete": "Delete"
+  },
+  {
+    "title": "Associates",
+    "contentCount": 400,
+    "creationDate": "10-7-2022",
+    "delete": "Delete"
+  },
+  {
+    "title": "Chambers",
+    "contentCount": 300,
+    "creationDate": "10-7-2022",
+    "delete": "Delete"
+  }
+]

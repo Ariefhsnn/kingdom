@@ -1,0 +1,388 @@
+import React, { useEffect, useState } from "react";
+
+import { AiOutlineEdit } from "react-icons/ai";
+import Button from "../../components/button";
+import DefaultSelect from "../../components/select";
+import { GlobalFilter } from "../../components/table/components/GlobalFilter";
+import Group from "../../utils/json/groups.json";
+import Layouts from "../../components/Layouts";
+import { MdEdit } from "react-icons/md";
+import Modal from "../../components/modal/Modal";
+import Navbar from "../../components/navbar";
+import Table from "../../components/table";
+import TaskTab from "../../components/button/TaskTab";
+import UploaderBox from "../../components/button/UploaderBox";
+
+const index = () => {
+  const [sidebar, setSidebar] = useState(false);
+  const [dataTable, setDataTable] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [pageCount, setPageCount] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [isSelected, setIsSelected] = useState("");
+  const [tab, setTab] = useState("Active");
+  const [isSearch, setIsSearch] = useState("");
+  const [isShowAdd, setIsShowAdd] = useState(false);
+  const [isShowEdit, setIsShowEdit] = useState(false);
+  const [fileSelected, setFileSelected] = useState([]);
+  const [isForm, setIsForm] = useState({});
+  const [opt, setOpt] = useState([]);
+  const [val, setVal] = useState([]);
+
+  const Menus = [
+    {
+      name: "Active",
+    },
+    {
+      name: "Inactive",
+    },
+  ];
+
+  const openModalAdd = () => {
+    setIsShowAdd(true);
+  };
+
+  const closeModalAdd = () => {
+    setIsShowAdd(false);
+    setFileSelected([]);
+    setVal([]);
+  };
+
+  const openModalEdit = (items) => {
+    setIsForm(items);
+    setIsShowEdit(true);
+    console.log("items", items);
+  };
+
+  const closeModalEdit = () => {
+    setIsShowEdit(false);
+    setIsForm({});
+  };
+
+  const onEdit = (val) => {
+    console.log(100, val);
+  };
+
+  useEffect(() => {
+    let optData = [];
+    if (Group?.length > 0) {
+      setDataTable(Group);
+      setTotal(Group?.length);
+      Group?.forEach((element) => {
+        optData.push({
+          ...element,
+          label: element?.groupName,
+          value: element?.groupName,
+        });
+      });
+      setOpt(optData);
+    } else {
+      setDataTable([]);
+    }
+  }, [Group]);
+
+  const Columns = [
+    {
+      Header: "Group name",
+      Footer: "Group name",
+      accessor: "groupName",
+    },
+    {
+      Header: "Group ID",
+      Footer: "Group ID",
+      accessor: "groupId",
+    },
+    {
+      Header: "Members",
+      Footer: "Members",
+      accessor: "members",
+    },
+    {
+      Header: "Creation date",
+      Footer: "Creation date",
+      accessor: "creationDate",
+    },
+    {
+      Header: "Terminate",
+      Footer: "Terminate",
+      accessor: "Terminate",
+    },
+    {
+      Header: "Action",
+      Footer: "Action",
+      accessor: "id",
+      Cell: ({ row, value }) => {
+        return (
+          <button onClick={() => openModalEdit(row?.original)}>
+            <AiOutlineEdit className="h-8 w-8 text-sky-400" />
+          </button>
+        );
+      },
+    },
+  ];
+
+  const handleFileChange = (e) => {
+    setFileSelected(e);
+  };
+
+  useEffect(() => {
+    console.log(12, fileSelected);
+  }, [fileSelected]);
+
+  const onSelectUser = (e) => {
+    setVal([{ ...val, name: e?.groupName, id: e?.id }]);
+  };
+
+  useEffect(() => {
+    console.log(val);
+  }, [val]);
+
+  return (
+    <>
+      <Navbar sidebar={sidebar} setSidebar={setSidebar} />
+      <Layouts
+        title="Community"
+        description="community"
+        sidebar={sidebar}
+        setSidebar={setSidebar}
+      >
+        <main className="container w-full flex flex-col text-primary-500 px-5 md:px-0">
+          <span className="tracking-wider text-2xl font-bold mb-10">
+            Community / Group
+          </span>
+          <span className="text-lg font-semibold"> Create </span>
+          <div className="w-40 my-5">
+            <Button
+              variant="outlineGreen"
+              onClick={openModalAdd}
+              className="flex justify-center"
+            >
+              <span className="flex justify-center"> Create Group</span>
+            </Button>
+          </div>
+          <span className="text-lg font-semibold">
+            {" "}
+            Groups ({Group?.length}){" "}
+          </span>
+          <TaskTab options={Menus} value={tab} setValue={setTab}>
+            <div className="md:ml-10 w-full md:w-[80%] flex justify-between items-center">
+              <div className="w-60">
+                <GlobalFilter
+                  preFilteredRows={tab == "Active" ? dataTable : null}
+                  filter={isSearch}
+                  setFilter={setIsSearch}
+                  loading={loading}
+                  setLoading={setLoading}
+                />
+              </div>
+              <div className="w-40">
+                <Button variant="outlineBlue" className="flex justify-center">
+                  Export as .xlsx
+                </Button>
+              </div>
+            </div>
+          </TaskTab>
+          {tab == "Active" ? (
+            <div className="w-full">
+              <Table
+                loading={loading}
+                setLoading={setLoading}
+                Columns={Columns}
+                items={dataTable}
+                setIsSelected={setIsSelected}
+                totalPages={pageCount}
+                total={total}
+                setPages={pageCount}
+              />
+            </div>
+          ) : null}
+        </main>
+      </Layouts>
+
+      {/* Create group */}
+      <Modal
+        isOpen={isShowAdd}
+        closeModal={closeModalAdd}
+        title="Create Group"
+        sizes="small"
+      >
+        <div className="px-10 pb-10 text-gray-700">
+          <div className="w-full flex flex-col mb-5">
+            <label htmlFor="groupName" className="font-bold text-base">
+              Group name
+            </label>
+            <input
+              type="text"
+              className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
+            />
+          </div>
+          <div className="w-full flex flex-col mb-5">
+            <label htmlFor="groupDescription" className="font-bold text-base">
+              Group description
+            </label>
+            <textarea
+              className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
+              rows="4"
+            />
+          </div>
+
+          <div className="w-full mb-5">
+            <label className="font-bold text-base"> Group icon </label>
+            <UploaderBox files={fileSelected} setFiles={setFileSelected} />
+          </div>
+
+          <div className="w-full mb-5">
+            <label className="font-bold text-base">Admin</label>
+            <DefaultSelect
+              value={val}
+              onChange={(e) => onSelectUser(e)}
+              isMulti={false}
+              options={opt}
+            />
+            {val?.length > 0 ? (
+              <div className="flex flex-col">
+                {val?.map((element) => (
+                  <div className="bg-gray-50 rounded p-2 mt-2">
+                    <span className="text-gray-500" key={element?.name}>
+                      {console.log(element)}
+                      {element?.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="w-2/3 mx-auto flex flex-row gap-3">
+            <Button
+              variant="outline"
+              className="w-1/2 flex justify-center items-center"
+              onClick={closeModalAdd}
+            >
+              <span className="text-base capitalize w-full"> Cancel </span>
+            </Button>
+            <Button
+              variant="primary"
+              className="w-1/2 flex justify-center items-center"
+            >
+              <span className="text-base capitalize w-full "> Create </span>
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Edit group */}
+      <Modal
+        isOpen={isShowEdit}
+        closeModal={closeModalEdit}
+        title="Edit Group"
+        sizes="small"
+      >
+        <div className="px-10 pb-10 text-gray-700">
+          <div className="w-full flex flex-col mb-5">
+            <label htmlFor="groupName" className="font-bold text-base">
+              Group name
+            </label>
+            <input
+              type="text"
+              className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
+              value={isForm?.groupName}
+              onChange={(e) =>
+                setIsForm({ ...isForm, groupName: e?.target?.value })
+              }
+            />
+          </div>
+          <div className="w-full flex flex-col mb-5">
+            <label htmlFor="groupDescription" className="font-bold text-base">
+              Group description
+            </label>
+            <textarea
+              className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
+              rows="4"
+              value={isForm?.groupDesc}
+              onChange={(e) =>
+                setIsForm({ ...isForm, groupDesc: e?.target?.value })
+              }
+            />
+          </div>
+
+          <div className="w-full mb-5">
+            <label className="font-bold text-base"> Group icon </label>
+            <UploaderBox files={fileSelected} setFiles={setFileSelected} />
+          </div>
+
+          <div className="w-full mb-5 flex flex-col gap-1">
+            <label className="font-bold text-base"> Creation Date </label>
+            <span className="text-gray-500 text-base font-semibold">
+              {" "}
+              {isForm?.creationDate}{" "}
+            </span>
+          </div>
+
+          <div className="w-full mb-5 flex flex-col gap-1">
+            <label className="font-bold text-base"> Members </label>
+            <span className="text-gray-500 text-base font-semibold">
+              {" "}
+              {isForm?.members}{" "}
+            </span>
+          </div>
+
+          <div className="w-full mb-5">
+            <label className="font-bold text-base">Admin</label>
+            <DefaultSelect
+              value={val}
+              onChange={(e) => onSelectUser(e)}
+              isMulti={false}
+              options={opt}
+            />
+            {val?.length > 0 ? (
+              <div className="flex flex-col">
+                {val?.map((element) => (
+                  <div className="bg-gray-50 rounded p-2 mt-2">
+                    <span className="text-gray-500" key={element?.name}>
+                      {console.log(element)}
+                      {element?.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="w-full mb-10 flex flex-col gap-2">
+            <label className="font-bold text-base">Admin</label>
+            {isForm?.gallery?.length > 0 ? (
+              <span> {isForm?.gallery} </span>
+            ) : (
+              <span className="italic text-gray-500 font-bold text-sm text-center">
+                {" "}
+                No photos found{" "}
+              </span>
+            )}
+          </div>
+
+          <div className="w-full mx-auto flex flex-row gap-3">
+            <Button
+              variant="danger"
+              className="w-1/2 flex justify-center items-center"
+              onClick={closeModalEdit}
+            >
+              <span className="text-base capitalize w-full">
+                {" "}
+                Delete Gorup{" "}
+              </span>
+            </Button>
+            <Button
+              variant="primary"
+              className="w-1/2 flex justify-center items-center"
+            >
+              <span className="text-base capitalize w-full "> Create </span>
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </>
+  );
+};
+
+export default index;

@@ -1,0 +1,30 @@
+[
+  {
+    "title": "Image",
+    "contentType": "Images",
+    "contentCount": 87,
+    "creationDate": "15-6-2022",
+    "delete": "Delete"
+  },
+  {
+    "title": "Video",
+    "contentType": "Videos",
+    "contentCount": 56,
+    "creationDate": "15-6-2022",
+    "delete": "Delete"
+  },
+  {
+    "title": "Business opportunities",
+    "contentType": "Articles",
+    "contentCount": 123,
+    "creationDate": "15-6-2022",
+    "delete": "Delete"
+  },
+  {
+    "title": "Latest news",
+    "contentType": "Articles",
+    "contentCount": 36,
+    "creationDate": "15-6-2022",
+    "delete": "Delete"
+  }
+]
