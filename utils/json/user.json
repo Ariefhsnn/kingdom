@@ -1,0 +1,37 @@
+[
+  {
+    "userName": "Staff name",
+    "userId": 98765,
+    "joinDate": "11-7-2022",
+    "Delete": "Delete",
+    "memberType": "Standard"
+  },
+  {
+    "userName": "Staff name",
+    "userId": 43210,
+    "joinDate": "11-7-2022",
+    "Delete": "Delete",
+    "memberType": "Standard"
+  },
+  {
+    "userName": "Staff name",
+    "userId": 13579,
+    "joinDate": "11-7-2022",
+    "Delete": "Delete",
+    "memberType": "Standard"
+  },
+  {
+    "userName": "Staff name",
+    "userId": 24680,
+    "joinDate": "11-7-2022",
+    "Delete": "Delete",
+    "memberType": "Standard"
+  },
+  {
+    "userName": "Staff name",
+    "userId": "00000",
+    "joinDate": "11-7-2022",
+    "Delete": "Delete",
+    "memberType": "Standard"
+  }
+]

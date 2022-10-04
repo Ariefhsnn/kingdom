@@ -4,7 +4,6 @@ import { AiOutlineEdit } from "react-icons/ai";
 import Button from "../../components/button";
 import DefaultSelect from "../../components/select";
 import { GlobalFilter } from "../../components/table/components/GlobalFilter";
-import Group from "../../utils/json/groups.json";
 import Layouts from "../../components/Layouts";
 import { MdEdit } from "react-icons/md";
 import Modal from "../../components/modal/Modal";
@@ -12,6 +11,7 @@ import Navbar from "../../components/navbar";
 import Table from "../../components/table";
 import TaskTab from "../../components/button/TaskTab";
 import UploaderBox from "../../components/button/UploaderBox";
+import items from "../../utils/json/user.json";
 
 const index = () => {
   const [sidebar, setSidebar] = useState(false);
@@ -49,10 +49,10 @@ const index = () => {
 
   useEffect(() => {
     let optData = [];
-    if (Group?.length > 0) {
-      setDataTable(Group);
-      setTotal(Group?.length);
-      Group?.forEach((element) => {
+    if (items?.length > 0) {
+      setDataTable(items);
+      setTotal(items?.length);
+      items?.forEach((element) => {
         optData.push({
           ...element,
           label: element?.groupName,
@@ -63,37 +63,32 @@ const index = () => {
     } else {
       setDataTable([]);
     }
-  }, [Group]);
+  }, [items]);
 
   const Columns = [
     {
-      Header: "Group name",
-      Footer: "Group name",
-      accessor: "groupName",
+      Header: "User name",
+      Footer: "User name",
+      accessor: "userName",
     },
     {
-      Header: "Group ID",
-      Footer: "Group ID",
-      accessor: "groupId",
+      Header: "User ID",
+      Footer: "User ID",
+      accessor: "userId",
     },
     {
-      Header: "Members",
-      Footer: "Members",
-      accessor: "members",
+      Header: "Join date",
+      Footer: "Join date",
+      accessor: "joinDate",
     },
     {
-      Header: "Creation date",
-      Footer: "Creation date",
-      accessor: "creationDate",
+      Header: "Delete",
+      Footer: "Delete",
+      accessor: "Delete",
     },
     {
-      Header: "Terminate",
-      Footer: "Terminate",
-      accessor: "Terminate",
-    },
-    {
-      Header: "Action",
-      Footer: "Action",
+      Header: "Member type",
+      Footer: "Member type",
       accessor: "id",
       Cell: ({ row, value }) => {
         return (
@@ -134,17 +129,7 @@ const index = () => {
           <span className="tracking-wider text-2xl font-bold mb-10">
             User Management
           </span>
-          {/* <span className="text-lg font-semibold"> Create </span>
-          <div className="w-40 my-5">
-            <Button
-              variant="outlineGreen"
-              onClick={openModalAdd}
-              className="flex justify-center"
-            >
-              <span className="flex justify-center"> New Tab</span>
-            </Button>
-          </div> */}
-          <span className="text-lg font-semibold"> Users (8) </span>
+          <span className="text-lg font-semibold"> Users ({total}) </span>
 
           <div className="w-full md:w-[90%] flex justify-between items-center mt-5">
             <div className="w-60">
