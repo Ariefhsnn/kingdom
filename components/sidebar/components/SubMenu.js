@@ -16,9 +16,9 @@ export default function SubMenu({ route }) {
   let router = useRouter();
   let btnRef = useRef();
 
-  useEffect(() => {
-    console.log(router?.pathname, "=", route?.routes[0]?.path);
-  }, [route]);
+  // useEffect(() => {
+  //   console.log(router?.pathname, "=", route?.routes[0]?.path);
+  // }, [route]);
 
   return (
     <div className="w-full overflow-y-auto">

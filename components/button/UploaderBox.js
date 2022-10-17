@@ -9,6 +9,7 @@ const UploaderBox = (props) => {
       "image/*": [],
     },
     onDrop: (acceptedFiles) => {
+      console.log("acc", acceptedFiles);
       setFiles(
         acceptedFiles.map((file) =>
           Object.assign(file, {

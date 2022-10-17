@@ -1,21 +1,20 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
-import { AiOutlineEdit } from "react-icons/ai";
 import Button from "../../components/button";
-import DefaultSelect from "../../components/select";
 import { GlobalFilter } from "../../components/table/components/GlobalFilter";
 import Layouts from "../../components/Layouts";
 import { MdEdit } from "react-icons/md";
 import Modal from "../../components/modal/Modal";
 import Navbar from "../../components/navbar";
 import Table from "../../components/table";
-import TaskTab from "../../components/button/TaskTab";
-import UploaderBox from "../../components/button/UploaderBox";
-import items from "../../utils/json/user.json";
+import axios from "axios";
+import { getCookie } from "../../utils/cookie";
 
-const index = () => {
+const index = (props) => {
+  let { token, userId } = props;
   const [sidebar, setSidebar] = useState(false);
   const [dataTable, setDataTable] = useState([]);
+  const [oldData, setOldData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pageCount, setPageCount] = useState(1);
   const [total, setTotal] = useState(0);
@@ -43,43 +42,56 @@ const index = () => {
     setVal([]);
   };
 
-  const onEdit = (val) => {
-    console.log(100, val);
+  const getUser = async () => {
+    try {
+      axios.get("http://157.230.35.148:9005/v1/user").then(function (response) {
+        setDataTable(response?.data?.data);
+        setOldData(response?.data?.data);
+        setTotal(response?.data?.data?.length);
+      });
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   useEffect(() => {
-    let optData = [];
-    if (items?.length > 0) {
-      setDataTable(items);
-      setTotal(items?.length);
-      items?.forEach((element) => {
-        optData.push({
-          ...element,
-          label: element?.groupName,
-          value: element?.groupName,
-        });
-      });
-      setOpt(optData);
+    getUser();
+  }, []);
+
+  const filteredItem = useMemo(() => {
+    setDataTable(oldData);
+    if (isSearch?.length >= 3) {
+      return dataTable.filter(
+        (e) => e?.username.toLowerCase().indexOf(isSearch.toLowerCase()) !== -1
+      );
     } else {
-      setDataTable([]);
+      setDataTable(oldData);
+      return dataTable;
     }
-  }, [items]);
+  }, [isSearch, dataTable]);
+
+  const dateToString = (date) => {
+    return new Date(date).toDateString();
+  };
 
   const Columns = [
     {
       Header: "User name",
       Footer: "User name",
-      accessor: "userName",
+      accessor: "username",
     },
     {
       Header: "User ID",
       Footer: "User ID",
-      accessor: "userId",
+      accessor: "id",
     },
     {
       Header: "Join date",
       Footer: "Join date",
-      accessor: "joinDate",
+      accessor: "created_at",
+      Cell: ({ value }) => {
+        return <span> {dateToString(value)} </span>;
+      },
     },
     {
       Header: "Delete",
@@ -89,20 +101,19 @@ const index = () => {
     {
       Header: "Member type",
       Footer: "Member type",
-      accessor: "id",
-      Cell: ({ row, value }) => {
-        return (
-          <button onClick={() => onEdit(row?.original)}>
-            <AiOutlineEdit className="h-8 w-8 text-sky-400" />
-          </button>
-        );
+      accessor: "role",
+      Cell: ({ value }) => {
+        return <span> {value} </span>;
       },
+      // Cell: ({ row, value }) => {
+      //   return (
+      //     <button onClick={() => onEdit(row?.original)}>
+      //       <AiOutlineEdit className="h-8 w-8 text-sky-400" />
+      //     </button>
+      //   );1
+      // },
     },
   ];
-
-  const handleFileChange = (e) => {
-    setFileSelected(e);
-  };
 
   useEffect(() => {
     console.log(12, fileSelected);
@@ -134,7 +145,7 @@ const index = () => {
           <div className="w-full md:w-[90%] flex justify-between items-center mt-5">
             <div className="w-60">
               <GlobalFilter
-                preFilteredRows={tab == "Tab" ? dataTable : null}
+                preFilteredRows={dataTable}
                 filter={isSearch}
                 setFilter={setIsSearch}
                 loading={loading}
@@ -154,7 +165,7 @@ const index = () => {
                 loading={loading}
                 setLoading={setLoading}
                 Columns={Columns}
-                items={dataTable}
+                items={filteredItem}
                 setIsSelected={setIsSelected}
                 totalPages={pageCount}
                 total={total}
@@ -260,3 +271,21 @@ const index = () => {
 };
 
 export default index;
+
+export async function getServerSideProps(context) {
+  const token = getCookie("token", context.req);
+  const userId = getCookie("userId", context.req);
+
+  if (!token) {
+    return {
+      redirect: {
+        destination: "/auth/login",
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: { token, userId },
+  };
+}

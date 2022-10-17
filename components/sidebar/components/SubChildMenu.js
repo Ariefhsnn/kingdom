@@ -16,7 +16,7 @@ export default function SubChildMenu({ route }) {
   let router = useRouter();
   let btnRef = useRef();
 
-  console.log(11, router?.pathname);
+  // console.log(11, router?.pathname);
 
   return (
     <div className="w-full overflow-y-auto">

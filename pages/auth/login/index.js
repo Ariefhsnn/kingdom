@@ -1,10 +1,45 @@
+import React, { useState } from "react";
+import { getCookie, setCookie } from "../../../utils/cookie";
+
+import { BiLoaderAlt } from "react-icons/bi";
 import Button from "../../../components/button";
 import Head from "next/head";
-import Layouts from "../../../components/Layouts";
-import Link from "next/link";
-import React from "react";
+import axios from "axios";
+import { useRouter } from "next/router";
 
 export default function login() {
+  let router = useRouter();
+  const [isForm, setIsForm] = useState({});
+  const [loading, setLoading] = useState(false);
+  const config = {
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+  };
+  const onLogin = async () => {
+    await setLoading(true);
+    try {
+      const res = await axios.post(
+        "http://157.230.35.148:9005/v1/auth/login",
+        isForm,
+        config
+      );
+      // toast.success("Login Succesfully!");
+
+      let { data, status } = res;
+      if (status == 200) {
+        await setCookie("token", data?.data?.token);
+        await setCookie("userId", data?.data?.id);
+        await router.push("/community");
+      }
+    } catch (error) {
+      let { status, data } = error?.response;
+      console.log(data?.message);
+    } finally {
+      await setLoading(false);
+    }
+  };
   return (
     <>
       <Head>
@@ -30,6 +65,9 @@ export default function login() {
               <input
                 type="email"
                 className="bg-gray-100 px-4 py-1.5 rounded w-full lg:w-3/4 focus:outline-none text-gray-500"
+                onChange={(e) =>
+                  setIsForm({ ...isForm, email: e?.target.value })
+                }
               />
             </div>
             <div className="flex flex-col md:flex-row items-center">
@@ -43,18 +81,31 @@ export default function login() {
               <input
                 type="password"
                 className="bg-gray-100 px-4 py-1.5 rounded w-full lg:w-3/4 focus:outline-none text-gray-500"
+                onChange={(e) =>
+                  setIsForm({ ...isForm, password: e?.target.value })
+                }
               />
             </div>
             <div className="lg:mt-10">
               <Button
                 variant="secondary"
-                className="bg-sky-600 hover:bg-sky-700 shadow-lg w-full py-1.5 rounded-md lg:w-1/3 lg:flex mx-auto"
+                className="bg-sky-600 hover:bg-sky-700 shadow-lg w-full py-1.5 rounded-md lg:w-[40%] lg:flex mx-auto"
+                onClick={onLogin}
+                disabled={loading}
               >
-                <Link href={`/community`}>
-                  <span className="flex justify-center text-white font-semibold lg:text-xl mx-auto">
+                {loading ? (
+                  <div className="flex flex-row items-center gap-2 w-full justify-center">
+                    <BiLoaderAlt className="h-5 w-5 animate-spin-slow" />
+                    <span className="text-white font-semibold text-sm">
+                      {" "}
+                      Proccessing{" "}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="flex justify-center text-white font-semibold lg:text-sm mx-auto">
                     Login
                   </span>
-                </Link>
+                )}
               </Button>
             </div>
           </div>
@@ -65,4 +116,21 @@ export default function login() {
       </div>
     </>
   );
+}
+export async function getServerSideProps(context) {
+  const token = await getCookie("token", context.req);
+  const userId = await getCookie("userId", context.req);
+
+  if (token) {
+    return {
+      redirect: {
+        destination: "/community",
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: {},
+  };
 }

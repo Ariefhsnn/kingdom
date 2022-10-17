@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import { AiOutlineEdit } from "react-icons/ai";
+import { BiLoaderAlt } from "react-icons/bi";
 import Button from "../../components/button";
 import DefaultSelect from "../../components/select";
 import { GlobalFilter } from "../../components/table/components/GlobalFilter";
@@ -12,12 +13,18 @@ import Navbar from "../../components/navbar";
 import Table from "../../components/table";
 import TaskTab from "../../components/button/TaskTab";
 import UploaderBox from "../../components/button/UploaderBox";
+import axios from "axios";
+import { getCookie } from "../../utils/cookie";
+import { toast } from "react-hot-toast";
 
-const index = () => {
+export default function index(props) {
+  let { token } = props;
   const [sidebar, setSidebar] = useState(false);
   const [dataTable, setDataTable] = useState([]);
+  const [oldData, setOldData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pageCount, setPageCount] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
   const [isSelected, setIsSelected] = useState("");
   const [tab, setTab] = useState("Active");
@@ -38,6 +45,10 @@ const index = () => {
     },
   ];
 
+  const openToast = () => {
+    toast.success("heeloo");
+  };
+
   const openModalAdd = () => {
     setIsShowAdd(true);
   };
@@ -51,7 +62,7 @@ const index = () => {
   const openModalEdit = (items) => {
     setIsForm(items);
     setIsShowEdit(true);
-    console.log("items", items);
+    // console.log("items", items);
   };
 
   const closeModalEdit = () => {
@@ -59,38 +70,86 @@ const index = () => {
     setIsForm({});
   };
 
-  const onEdit = (val) => {
-    console.log(100, val);
+  const getGroup = async () => {
+    try {
+      axios
+        .get("http://157.230.35.148:9005/v1/group")
+        .then(function (response) {
+          setDataTable(response?.data?.data);
+          setOldData(response?.data?.data);
+        });
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   useEffect(() => {
-    let optData = [];
-    if (Group?.length > 0) {
-      setDataTable(Group);
-      setTotal(Group?.length);
-      Group?.forEach((element) => {
-        optData.push({
-          ...element,
-          label: element?.groupName,
-          value: element?.groupName,
-        });
-      });
-      setOpt(optData);
+    getGroup();
+  }, []);
+
+  useEffect(() => {
+    setDataTable(oldData);
+    let filteredUser = dataTable.filter(
+      (e) => e?.name.toLowerCase().indexOf(isSearch.toLowerCase()) !== -1
+    );
+    setDataTable(filteredUser);
+  }, [isSearch]);
+
+  const filteredItem = useMemo(() => {
+    setDataTable(oldData);
+    if (isSearch?.length >= 3) {
+      return dataTable.filter(
+        (e) => e?.name.toLowerCase().indexOf(isSearch.toLowerCase()) !== -1
+      );
     } else {
-      setDataTable([]);
+      setDataTable(oldData);
+      return dataTable;
     }
-  }, [Group]);
+  }, [isSearch, dataTable]);
+
+  const dateToString = (date) => {
+    return new Date(date).toDateString();
+  };
+
+  const onCreate = async () => {
+    await setLoading(true);
+    try {
+      const res = await axios.post(
+        "http://157.230.35.148:9005/v1/group",
+        isForm
+      );
+      let { data, status } = res;
+      console.log(res);
+      if (status == 200 || status == 201) {
+        console.log(data);
+        await toast("Created successfully");
+        await getGroup();
+        await setLoading(false);
+        await closeModalAdd();
+      }
+    } catch (error) {
+      let { data } = error?.response;
+      console.log(data);
+    }
+  };
+
+  useEffect(() => {
+    if (dataTable?.length > 0) {
+      setTotal(dataTable?.length);
+      // setPageCount(2);
+    }
+  }, [dataTable]);
 
   const Columns = [
     {
       Header: "Group name",
       Footer: "Group name",
-      accessor: "groupName",
+      accessor: "name",
     },
     {
       Header: "Group ID",
       Footer: "Group ID",
-      accessor: "groupId",
+      accessor: "id",
     },
     {
       Header: "Members",
@@ -100,7 +159,10 @@ const index = () => {
     {
       Header: "Creation date",
       Footer: "Creation date",
-      accessor: "creationDate",
+      accessor: "created_at",
+      Cell: ({ value }) => {
+        return <span> {dateToString(value)}</span>;
+      },
     },
     {
       Header: "Terminate",
@@ -110,7 +172,7 @@ const index = () => {
     {
       Header: "Action",
       Footer: "Action",
-      accessor: "id",
+      accessor: "",
       Cell: ({ row, value }) => {
         return (
           <button onClick={() => openModalEdit(row?.original)}>
@@ -125,17 +187,9 @@ const index = () => {
     setFileSelected(e);
   };
 
-  useEffect(() => {
-    console.log(12, fileSelected);
-  }, [fileSelected]);
-
   const onSelectUser = (e) => {
     setVal([{ ...val, name: e?.groupName, id: e?.id }]);
   };
-
-  useEffect(() => {
-    console.log(val);
-  }, [val]);
 
   return (
     <>
@@ -162,7 +216,7 @@ const index = () => {
           </div>
           <span className="text-lg font-semibold">
             {" "}
-            Groups ({Group?.length}){" "}
+            Groups ({dataTable?.length})
           </span>
           <TaskTab options={Menus} value={tab} setValue={setTab}>
             <div className="md:ml-10 w-full md:w-[80%] flex justify-between items-center">
@@ -176,7 +230,11 @@ const index = () => {
                 />
               </div>
               <div className="w-40">
-                <Button variant="outlineBlue" className="flex justify-center">
+                <Button
+                  variant="outlineBlue"
+                  className="flex justify-center"
+                  onClick={openToast}
+                >
                   Export as .xlsx
                 </Button>
               </div>
@@ -188,7 +246,7 @@ const index = () => {
                 loading={loading}
                 setLoading={setLoading}
                 Columns={Columns}
-                items={dataTable}
+                items={filteredItem}
                 setIsSelected={setIsSelected}
                 totalPages={pageCount}
                 total={total}
@@ -214,6 +272,7 @@ const index = () => {
             <input
               type="text"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
+              onChange={(e) => setIsForm({ ...isForm, name: e?.target?.value })}
             />
           </div>
           <div className="w-full flex flex-col mb-5">
@@ -223,6 +282,9 @@ const index = () => {
             <textarea
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
               rows="4"
+              onChange={(e) =>
+                setIsForm({ ...isForm, description: e?.target?.value })
+              }
             />
           </div>
 
@@ -231,7 +293,7 @@ const index = () => {
             <UploaderBox files={fileSelected} setFiles={setFileSelected} />
           </div>
 
-          <div className="w-full mb-5">
+          {/* <div className="w-full mb-5">
             <label className="font-bold text-base">Admin</label>
             <DefaultSelect
               value={val}
@@ -244,14 +306,13 @@ const index = () => {
                 {val?.map((element) => (
                   <div className="bg-gray-50 rounded p-2 mt-2">
                     <span className="text-gray-500" key={element?.name}>
-                      {console.log(element)}
                       {element?.name}
                     </span>
                   </div>
                 ))}
               </div>
             ) : null}
-          </div>
+          </div> */}
 
           <div className="w-2/3 mx-auto flex flex-row gap-3">
             <Button
@@ -264,8 +325,20 @@ const index = () => {
             <Button
               variant="primary"
               className="w-1/2 flex justify-center items-center"
+              onClick={onCreate}
+              disabled={loading}
             >
-              <span className="text-base capitalize w-full "> Create </span>
+              {loading ? (
+                <div className="flex flex-row items-center gap-2 w-full justify-center">
+                  <BiLoaderAlt className="h-5 w-5 animate-spin-slow" />
+                  <span className="text-white font-semibold text-sm">
+                    {" "}
+                    Proccessing{" "}
+                  </span>
+                </div>
+              ) : (
+                <span className="text-base capitalize w-full "> Create </span>
+              )}
             </Button>
           </div>
         </div>
@@ -286,10 +359,8 @@ const index = () => {
             <input
               type="text"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
-              value={isForm?.groupName}
-              onChange={(e) =>
-                setIsForm({ ...isForm, groupName: e?.target?.value })
-              }
+              value={isForm?.name}
+              onChange={(e) => setIsForm({ ...isForm, name: e?.target?.value })}
             />
           </div>
           <div className="w-full flex flex-col mb-5">
@@ -299,9 +370,9 @@ const index = () => {
             <textarea
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
               rows="4"
-              value={isForm?.groupDesc}
+              value={isForm?.description}
               onChange={(e) =>
-                setIsForm({ ...isForm, groupDesc: e?.target?.value })
+                setIsForm({ ...isForm, description: e?.target?.value })
               }
             />
           </div>
@@ -315,7 +386,7 @@ const index = () => {
             <label className="font-bold text-base"> Creation Date </label>
             <span className="text-gray-500 text-base font-semibold">
               {" "}
-              {isForm?.creationDate}{" "}
+              {dateToString(isForm?.created_at)}{" "}
             </span>
           </div>
 
@@ -340,7 +411,6 @@ const index = () => {
                 {val?.map((element) => (
                   <div className="bg-gray-50 rounded p-2 mt-2">
                     <span className="text-gray-500" key={element?.name}>
-                      {console.log(element)}
                       {element?.name}
                     </span>
                   </div>
@@ -383,6 +453,21 @@ const index = () => {
       </Modal>
     </>
   );
-};
+}
 
-export default index;
+export async function getServerSideProps(context) {
+  const token = getCookie("token", context.req);
+
+  if (!token) {
+    return {
+      redirect: {
+        destination: "/auth/login",
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: { token },
+  };
+}

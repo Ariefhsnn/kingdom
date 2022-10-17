@@ -2,18 +2,17 @@ import React, { useEffect, useState } from "react";
 
 import { AiOutlineEdit } from "react-icons/ai";
 import Button from "../../components/button";
-import DefaultSelect from "../../components/select";
 import { GlobalFilter } from "../../components/table/components/GlobalFilter";
 import Layouts from "../../components/Layouts";
-import { MdEdit } from "react-icons/md";
 import Modal from "../../components/modal/Modal";
 import Navbar from "../../components/navbar";
 import Table from "../../components/table";
 import TaskTab from "../../components/button/TaskTab";
-import UploaderBox from "../../components/button/UploaderBox";
+import { getCookie } from "../../utils/cookie";
 import items from "../../utils/json/tabs.json";
 
-const index = () => {
+const index = (props) => {
+  let { token, userId } = props;
   const [sidebar, setSidebar] = useState(false);
   const [dataTable, setDataTable] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -56,6 +55,22 @@ const index = () => {
     setIsForm({});
     setRadioValue("");
   };
+
+  // const getDiscover = async () => {
+  //   try {
+  //     axios
+  //       .get("http://157.230.35.148:9005/v1/discover")
+  //       .then(function (response) {
+  //         setDataTable(response?.data?.data);
+  //       });
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   getDiscover();
+  // }, []);
 
   useEffect(() => {
     if (items?.length > 0) {
@@ -392,3 +407,21 @@ const index = () => {
 };
 
 export default index;
+
+export async function getServerSideProps(context) {
+  const token = getCookie("token", context.req);
+  const userId = getCookie("userId", context.req);
+
+  if (!token) {
+    return {
+      redirect: {
+        destination: "/auth/login",
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: { token, userId },
+  };
+}

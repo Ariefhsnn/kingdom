@@ -11,9 +11,12 @@ import Navbar from "../../../components/navbar";
 import Table from "../../../components/table";
 import TaskTab from "../../../components/button/TaskTab";
 import UploaderBox from "../../../components/button/UploaderBox";
+import axios from "axios";
+import { getCookie } from "../../../utils/cookie";
 import items from "../../../utils/json/directoryUpload.json";
 
-const index = () => {
+const index = ([props]) => {
+  let { token, userId } = props;
   const [sidebar, setSidebar] = useState(false);
   const [dataTable, setDataTable] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -56,8 +59,12 @@ const index = () => {
   };
 
   const openModalEdit = (items) => {
+    let type =
+      items?.category?.charAt(0)?.toUpperCase() + items?.category?.slice(1);
     setIsForm(items);
     setIsShowEdit(true);
+    setRadioValue(type);
+    console.log(type);
   };
 
   const closeModalEdit = () => {
@@ -77,18 +84,34 @@ const index = () => {
 
   useEffect(() => {
     if (items?.length > 0) {
-      let filterChurches = items.filter((e) => e?.type == "churches")?.length;
       let filterAssociates = items.filter(
         (e) => e?.type == "associates"
       )?.length;
       let filterChambers = items.filter((e) => e?.type == "chambers")?.length;
       tab == "Churches"
-        ? setTotal(filterChurches)
+        ? setTotal(churchesData.length)
         : tab == "Associates"
         ? setTotal(filterAssociates)
         : setTotal(filterChambers);
     }
   }, [items, tab]);
+
+  const getDirectory = async () => {
+    try {
+      axios
+        .get("http://157.230.35.148:9005/v1/directory/church")
+        .then(function (response) {
+          setChurchesData(response?.data?.data);
+          // setOldData(response?.data?.data);
+        });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    getDirectory();
+  }, []);
 
   const Columns = [
     {
@@ -413,6 +436,7 @@ const index = () => {
               type="text"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
               value={isForm?.name || ""}
+              onChange={(e) => setIsForm({ ...isForm, name: e?.target?.value })}
             />
           </div>
 
@@ -424,18 +448,18 @@ const index = () => {
               <div className="flex gap-2 items-center">
                 <input
                   type="radio"
-                  value="Churches"
-                  id="Churches"
+                  value="Church"
+                  id="Church"
                   name="contentType"
                   className="text-gray-500 w-4 h-4"
-                  checked={radioValue === "Churches"}
+                  checked={radioValue === "Church"}
                   onChange={(e) => setRadioValue(e?.target?.value)}
                 />
                 <label
-                  htmlFor="Churches"
+                  htmlFor="Church"
                   className="font-semibold cursor-pointer"
                 >
-                  Churches
+                  Church
                 </label>
               </div>
               <div className="flex gap-2 items-center">
@@ -482,7 +506,10 @@ const index = () => {
             <textarea
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
               rows="4"
-              value={isForm?.description}
+              value={isForm?.description || ""}
+              onChange={(e) =>
+                setIsForm({ ...isForm, description: e?.target?.value })
+              }
             />
           </div>
 
@@ -494,6 +521,9 @@ const index = () => {
               type="text"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
               value={isForm?.location || ""}
+              onChange={(e) =>
+                setIsForm({ ...isForm, location: e?.target?.value })
+              }
             />
           </div>
 
@@ -504,6 +534,9 @@ const index = () => {
             <input
               type="text"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
+              onChange={(e) =>
+                setIsForm({ ...isForm, website: e?.target?.value })
+              }
             />
           </div>
 
@@ -514,6 +547,9 @@ const index = () => {
             <input
               type="number"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
+              onChange={(e) =>
+                setIsForm({ ...isForm, phone: e?.target?.value })
+              }
             />
           </div>
 
@@ -524,6 +560,9 @@ const index = () => {
             <input
               type="email"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
+              onChange={(e) =>
+                setIsForm({ ...isForm, email: e?.target?.value })
+              }
             />
           </div>
 
@@ -534,6 +573,9 @@ const index = () => {
             <textarea
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
               rows="4"
+              onChange={(e) =>
+                setIsForm({ ...isForm, opening: e?.target?.value })
+              }
             />
           </div>
 
@@ -564,3 +606,21 @@ const index = () => {
 };
 
 export default index;
+
+export async function getServerSideProps(context) {
+  const token = getCookie("token", context.req);
+  const userId = getCookie("userId", context.req);
+
+  if (!token) {
+    return {
+      redirect: {
+        destination: "/auth/login",
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: { token, userId },
+  };
+}

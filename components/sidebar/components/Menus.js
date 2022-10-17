@@ -17,9 +17,9 @@ export default function Menus(props) {
   const { pathname, query } = router;
   const { routes } = props;
 
-  useEffect(() => {
-    console.log(pathname, "=", routes[0]?.routes[0]?.path);
-  }, [pathname]);
+  // useEffect(() => {
+  //   console.log(pathname, "=", routes[0]?.routes[0]?.path);
+  // }, [pathname]);
 
   return routes?.map((route, idx) => {
     if (route?.routes) {

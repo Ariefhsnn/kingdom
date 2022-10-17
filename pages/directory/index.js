@@ -11,9 +11,11 @@ import Navbar from "../../components/navbar";
 import Table from "../../components/table";
 import TaskTab from "../../components/button/TaskTab";
 import UploaderBox from "../../components/button/UploaderBox";
+import { getCookie } from "../../utils/cookie";
 import items from "../../utils/json/category.json";
 
-const index = () => {
+const index = (props) => {
+  let { token, userId } = props;
   const [sidebar, setSidebar] = useState(false);
   const [dataTable, setDataTable] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -291,3 +293,20 @@ const index = () => {
 };
 
 export default index;
+export async function getServerSideProps(context) {
+  const token = getCookie("token", context.req);
+  const userId = getCookie("userId", context.req);
+
+  if (!token) {
+    return {
+      redirect: {
+        destination: "/auth/login",
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: { token, userId },
+  };
+}

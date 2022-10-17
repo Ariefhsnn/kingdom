@@ -1,18 +1,24 @@
 import React, { useEffect, useState } from "react";
 
 import { AiOutlineEdit } from "react-icons/ai";
+import { BiLoaderAlt } from "react-icons/bi";
 import Button from "../../../components/button";
 import { GlobalFilter } from "../../../components/table/components/GlobalFilter";
 import Layouts from "../../../components/Layouts";
 import Link from "next/link";
+import { MdDeleteOutline } from "react-icons/md";
 import Modal from "../../../components/modal/Modal";
 import Navbar from "../../../components/navbar";
 import Table from "../../../components/table";
 import TaskTab from "../../../components/button/TaskTab";
 import UploaderBox from "../../../components/button/UploaderBox";
+import axios from "axios";
+import { getCookie } from "../../../utils/cookie";
 import items from "../../../utils/json/discoverUploads.json";
+import toast from "react-hot-toast";
 
-const index = () => {
+export default function index(props) {
+  let { token, userId } = props;
   const [sidebar, setSidebar] = useState(false);
   const [imgData, setImgData] = useState([]);
   const [videoData, setVideoData] = useState([]);
@@ -34,6 +40,7 @@ const index = () => {
   const Menus = [
     {
       name: "Image",
+      label: "image",
     },
     {
       name: "Video",
@@ -53,6 +60,7 @@ const index = () => {
   const closeModalAdd = () => {
     setIsShowAdd(false);
     setFileSelected([]);
+    setIsForm({});
     setVal([]);
   };
 
@@ -69,50 +77,95 @@ const index = () => {
     setFileSelected([]);
   };
 
-  useEffect(() => {
-    if (items?.length > 0) {
-      setImgData(items.filter((e) => e?.type == "image"));
-      setVideoData(items.filter((e) => e?.type == "video"));
-      setBoData(items.filter((e) => e?.type == "business"));
-      setNewsData(items.filter((e) => e?.type == "news"));
-    } else {
-      setImgData([]);
-      setBoData([]);
-      setVideoData([]);
-      setNewsData([]);
+  const dateToString = (date) => {
+    return new Date(date).toDateString();
+  };
+
+  const getDiscover = async () => {
+    try {
+      axios
+        .get("http://157.230.35.148:9005/v1/discover")
+        .then(function (response) {
+          // setDataTable(response?.data?.data);
+          setImgData(response?.data?.data?.image);
+          setNewsData(response?.data?.data?.news);
+          setBoData(response?.data?.data?.business);
+          setVideoData(response?.data?.data?.video);
+        });
+    } catch (error) {
+      console.log(error);
     }
-  }, [items]);
+  };
 
   useEffect(() => {
-    if (items.length > 0) {
-      let filterImg = items.filter((e) => e.type == "image").length;
-      let filterVideo = items.filter((e) => e.type == "video").length;
-      let filterBo = items.filter((e) => e.type == "business").length;
-      let filterNews = items.filter((e) => e.type == "news").length;
+    getDiscover();
+  }, []);
+
+  useEffect(() => {
+    if (imgData?.length > 0) imgData.forEach((e) => (e["type"] = "image"));
+    if (videoData?.length > 0) videoData.forEach((e) => (e["type"] = "video"));
+    if (boData?.length > 0) boData.forEach((e) => (e["type"] = "business"));
+    if (newsData?.length > 0) newsData.forEach((e) => (e["type"] = "news"));
+  }, [imgData, videoData, boData, newsData]);
+
+  // useEffect(() => {
+  //   if (items?.length > 0) {
+  //     setImgData(items.filter((e) => e?.type == "image"));
+  //     setVideoData(items.filter((e) => e?.type == "video"));
+  //     setBoData(items.filter((e) => e?.type == "business"));
+  //     setNewsData(items.filter((e) => e?.type == "news"));
+  //   } else {
+  //     setImgData([]);
+  //     setBoData([]);
+  //     setVideoData([]);
+  //     setNewsData([]);
+  //   }
+  // }, [items]);
+
+  useEffect(() => {
+    if (
+      imgData.length > 0 ||
+      videoData?.length > 0 ||
+      boData?.length > 0 ||
+      newsData?.length > 0
+    ) {
       tab == "Image"
-        ? setTotal(filterImg)
+        ? setTotal(imgData?.length)
         : tab == "Video"
-        ? setTotal(filterVideo)
+        ? setTotal(videoData.length)
         : tab == "Business opportunities"
-        ? setTotal(filterBo)
-        : setTotal(filterNews);
+        ? setTotal(boData.length)
+        : setTotal(newsData.length);
     }
-  }, [tab, items]);
+  }, [tab, imgData, boData, newsData, videoData]);
 
   const Columns = [
     {
       Header: "Title",
       Footer: "Title",
       accessor: "title",
+      Cell: ({ value }) => {
+        return (
+          <span
+            className={`${
+              !value ? "text-sm font-normal italic text-gray-500" : ""
+            }`}
+          >
+            {" "}
+            {!value ? "empty" : value}{" "}
+          </span>
+        );
+      },
     },
     {
       Header: "Link",
       Footer: "Link",
-      accessor: "link",
+      accessor: "media_url",
       Cell: ({ value }) => {
         return (
           <span>
-            {value.length > 50 ? value.substring(50, 0) + "..." : value}
+            {value?.length > 50 ? value?.substring(50, 0) + "..." : value}
+            {/* {value} */}
           </span>
         );
       },
@@ -120,7 +173,10 @@ const index = () => {
     {
       Header: "Creation date",
       Footer: "Creation date",
-      accessor: "creationDate",
+      accessor: "created_at",
+      Cell: ({ value }) => {
+        return <span> {dateToString(value)} </span>;
+      },
     },
     {
       Header: "Delete",
@@ -140,10 +196,6 @@ const index = () => {
       },
     },
   ];
-
-  const handleFileChange = (e) => {
-    setFileSelected(e);
-  };
 
   useEffect(() => {
     console.log(12, fileSelected);
@@ -172,8 +224,13 @@ const index = () => {
       <div className="w-full flex flex-col mb-5">
         <label className="font-bold text-base"> Upload image </label>
         <UploaderBox files={fileSelected} setFiles={setFileSelected} />
-        {isForm?.images?.length > 0 ? (
-          <span> {isForm?.images} </span>
+        {isForm?.media_url?.length > 0 ? (
+          <div className="w-full bg-gray-50 py-2 px-5 rounded-md items-center flex justify-between mt-5">
+            <img src={isForm?.media_url} className="h-[60px] w-[60px]" />
+            <div>
+              <MdDeleteOutline className="w-8 h-8 text-gray-500" />
+            </div>
+          </div>
         ) : (
           <span className="my-3 text-center font-bold italic text-sm">
             {isEdit ? "No image found" : null}
@@ -204,14 +261,99 @@ const index = () => {
           <textarea
             className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
             rows="4"
-            value={isForm?.description}
+            value={isForm?.content}
             onChange={(e) =>
-              setIsForm({ ...isForm, description: e?.target?.value })
+              setIsForm({ ...isForm, content: e?.target?.value })
             }
           />
         </div>
       </div>
     );
+  };
+
+  const onUpload = async () => {
+    console.log(radioValue);
+    await setLoading(true);
+    const config = {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    if (radioValue == "image") {
+      let dataImage = new FormData();
+      dataImage.append("images", fileSelected[0], `${fileSelected[0].path}`);
+      try {
+        const res = await axios.post(
+          "http://157.230.35.148:9005/v1/content/images",
+          data,
+          config
+        );
+        let { status, data } = res;
+        if (status == 200 || status == 201) {
+          await toast("Data succesfully added!");
+          await getDiscover();
+          await closeModalAdd();
+        }
+      } catch (error) {
+        console.log(error?.response);
+      }
+    } else if (radioValue == "video") {
+      return;
+    } else if (radioValue == "business") {
+      let businessData = new FormData();
+      businessData.append("user_id", userId);
+      businessData.append("title", isForm?.title);
+      businessData.append("content", isForm?.content);
+      businessData.append(
+        "cover_picture",
+        fileSelected[0],
+        `${fileSelected[0].path}`
+      );
+      try {
+        const res = await axios.post(
+          "http://157.230.35.148:9005/v1/content/business",
+          businessData,
+          config
+        );
+        let { data, status } = res;
+        if (status == 200 || status == 201) {
+          await toast("Data succesfully added!");
+          await setLoading(false);
+          await getDiscover();
+          await closeModalAdd();
+        }
+      } catch (error) {
+        console.log(error?.response);
+      }
+    } else {
+      let newsData = new FormData();
+      newsData.append("user_id", userId);
+      newsData.append("title", isForm?.title);
+      newsData.append("content", isForm?.content);
+      newsData.append(
+        "cover_picture",
+        fileSelected[0],
+        `${fileSelected[0].path}`
+      );
+      try {
+        const res = await axios.post(
+          "http://157.230.35.148:9005/v1/news",
+          newsData,
+          config
+        );
+        let { data, status } = res;
+        if (status == 200 || status == 201) {
+          await toast("Data succesfully added!");
+          await setLoading(false);
+          await getDiscover();
+          await closeModalAdd();
+        }
+      } catch (error) {
+        console.log(error?.response);
+      }
+    }
   };
 
   return (
@@ -324,6 +466,9 @@ const index = () => {
             <input
               type="text"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
+              onChange={(e) =>
+                setIsForm({ ...isForm, title: e?.target?.value })
+              }
             />
           </div>
 
@@ -419,8 +564,20 @@ const index = () => {
             <Button
               variant="primary"
               className="w-1/2 flex justify-center items-center"
+              onClick={onUpload}
+              disabled={loading}
             >
-              <span className="text-base capitalize w-full "> Upload </span>
+              {loading ? (
+                <div className="flex flex-row items-center gap-2 w-full justify-center">
+                  <BiLoaderAlt className="h-5 w-5 animate-spin-slow" />
+                  <span className="text-white font-semibold text-sm">
+                    {" "}
+                    Proccessing{" "}
+                  </span>
+                </div>
+              ) : (
+                <span className="text-base capitalize w-full "> Upload </span>
+              )}
             </Button>
           </div>
         </div>
@@ -522,7 +679,7 @@ const index = () => {
           <div className="w-full mb-5 flex flex-col ">
             <label className="font-bold text-base"> Creation Date </label>
             <span className="text-gray-500 text-base font-semibold">
-              {isForm?.creationDate}
+              {dateToString(isForm?.created_at)}
             </span>
           </div>
 
@@ -555,6 +712,22 @@ const index = () => {
       </Modal>
     </>
   );
-};
+}
 
-export default index;
+export async function getServerSideProps(context) {
+  const token = getCookie("token", context.req);
+  const userId = getCookie("userId", context.req);
+
+  if (!token) {
+    return {
+      redirect: {
+        destination: "/auth/login",
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: { token, userId },
+  };
+}
