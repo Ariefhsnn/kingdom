@@ -22,7 +22,7 @@ export default function Login() {
     await setLoading(true);
     try {
       const res = await axios.post(
-        "http://157.230.35.148:9005/v1/auth/login",
+        "https://kingdom-api-dev.gbempower.asia/auth/login",
         isForm,
         config
       );
