@@ -45,6 +45,7 @@ export default function Login() {
       <Head>
         <title>Login | Kingdom Driven</title>
         <meta name="description" content="Kingdom Driven" />
+        <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"/> 
       </Head>
       <div className="bg-gray-50 w-full h-screen p-5">
         <div className="w-full lg:w-1/3 justify-center flex flex-col p-10 mx-auto my-5">
