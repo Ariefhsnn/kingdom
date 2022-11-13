@@ -15,7 +15,7 @@ import UploaderBox from "../../../components/button/UploaderBox";
 import axios from "axios";
 import { getCookie } from "../../../utils/cookie";
 import items from "../../../utils/json/discoverUploads.json";
-import toast from "react-hot-toast";
+import { toast } from "react-toastify";
 
 export default function Index(props) {
   let { token, userId } = props;
@@ -24,6 +24,7 @@ export default function Index(props) {
   const [videoData, setVideoData] = useState([]);
   const [boData, setBoData] = useState([]);
   const [newsData, setNewsData] = useState([]);
+  const [dataTable, setDataTable] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pageCount, setPageCount] = useState(1);
   const [total, setTotal] = useState(0);
@@ -84,13 +85,13 @@ export default function Index(props) {
   const getDiscover = async () => {
     try {
       axios
-        .get("http://157.230.35.148:9005/v1/discover")
+        .get("http://157.230.35.148:9005/v1/discover-content")
         .then(function (response) {
-          // setDataTable(response?.data?.data);
-          setImgData(response?.data?.data?.image);
-          setNewsData(response?.data?.data?.news);
-          setBoData(response?.data?.data?.business);
-          setVideoData(response?.data?.data?.video);
+          setDataTable(response?.data?.data);
+          // setImgData(response?.data?.data?.image);
+          // setNewsData(response?.data?.data?.news);
+          // setBoData(response?.data?.data?.business);
+          // setVideoData(response?.data?.data?.video);
         });
     } catch (error) {
       console.log(error);
@@ -271,89 +272,35 @@ export default function Index(props) {
     );
   };
 
-  const onUpload = async () => {
-    console.log(radioValue);
-    await setLoading(true);
-    const config = {
-      headers: {
-        "Content-Type": "multipart/form-data",
-        Authorization: `Bearer ${token}`,
-      },
-    };
+  const onUpload = async () => {    
+      // await setLoading(true);
+      // let items = new FormData();
+      // items.append('title', isForm?.title)
+      // items.append('description', isForm)
+      // const config = {
+      //   headers: {
+      //     "Content-Type": "multipart/form-data",
+      //     Authorization: `Bearer ${token}`,
+      //   },
+      // };
 
-    if (radioValue == "image") {
-      let dataImage = new FormData();
-      dataImage.append("images", fileSelected[0], `${fileSelected[0].path}`);
-      try {
-        const res = await axios.post(
-          "http://157.230.35.148:9005/v1/content/images",
-          data,
-          config
-        );
-        let { status, data } = res;
-        if (status == 200 || status == 201) {
-          await toast("Data succesfully added!");
-          await getDiscover();
-          await closeModalAdd();
-        }
-      } catch (error) {
-        console.log(error?.response);
-      }
-    } else if (radioValue == "video") {
-      return;
-    } else if (radioValue == "business") {
-      let businessData = new FormData();
-      businessData.append("user_id", userId);
-      businessData.append("title", isForm?.title);
-      businessData.append("content", isForm?.content);
-      businessData.append(
-        "cover_picture",
-        fileSelected[0],
-        `${fileSelected[0].path}`
-      );
-      try {
-        const res = await axios.post(
-          "http://157.230.35.148:9005/v1/content/business",
-          businessData,
-          config
-        );
-        let { data, status } = res;
-        if (status == 200 || status == 201) {
-          await toast("Data succesfully added!");
-          await setLoading(false);
-          await getDiscover();
-          await closeModalAdd();
-        }
-      } catch (error) {
-        console.log(error?.response);
-      }
-    } else {
-      let newsData = new FormData();
-      newsData.append("user_id", userId);
-      newsData.append("title", isForm?.title);
-      newsData.append("content", isForm?.content);
-      newsData.append(
-        "cover_picture",
-        fileSelected[0],
-        `${fileSelected[0].path}`
-      );
-      try {
-        const res = await axios.post(
-          "http://157.230.35.148:9005/v1/news",
-          newsData,
-          config
-        );
-        let { data, status } = res;
-        if (status == 200 || status == 201) {
-          await toast("Data succesfully added!");
-          await setLoading(false);
-          await getDiscover();
-          await closeModalAdd();
-        }
-      } catch (error) {
-        console.log(error?.response);
-      }
-    }
+      // dataImage.append("images", fileSelected[0], `${fileSelected[0].path}`);
+      // try {
+      //   const res = await axios.post(
+      //     "http://157.230.35.148:9005/v1/discover-content",
+      //     data,
+      //     config
+      //   );
+      //   let { status, data } = res;
+      //   if (status == 200 || status == 201) {
+      //     await toast("Data succesfully added!");
+      //     await getDiscover();
+      //     await closeModalAdd();
+      //   }
+      // } catch (error) {
+      //   console.log(error?.response);
+      // }
+    
   };
 
   return (

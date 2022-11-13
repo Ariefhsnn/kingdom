@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import { AiOutlineEdit } from "react-icons/ai";
+import { BiLoaderAlt } from "react-icons/bi";
 import Button from "../../components/button";
 import { GlobalFilter } from "../../components/table/components/GlobalFilter";
 import Layouts from "../../components/Layouts";
@@ -8,8 +9,10 @@ import Modal from "../../components/modal/Modal";
 import Navbar from "../../components/navbar";
 import Table from "../../components/table";
 import TaskTab from "../../components/button/TaskTab";
+import axios from "axios";
 import { getCookie } from "../../utils/cookie";
 import items from "../../utils/json/tabs.json";
+import { toast } from "react-toastify";
 
 const Index = (props) => {
   let { token, userId } = props;
@@ -47,7 +50,7 @@ const Index = (props) => {
   const openModalEdit = (items) => {
     setIsForm(items);
     setIsShowEdit(true);
-    setRadioValue(items?.contentType);
+    setRadioValue(items?.content_type);
   };
 
   const closeModalEdit = () => {
@@ -56,21 +59,23 @@ const Index = (props) => {
     setRadioValue("");
   };
 
-  // const getDiscover = async () => {
-  //   try {
-  //     axios
-  //       .get("http://157.230.35.148:9005/v1/discover")
-  //       .then(function (response) {
-  //         setDataTable(response?.data?.data);
-  //       });
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // };
+  const getDiscover = async () => {
+    try {
+      axios
+        .get("http://157.230.35.148:9005/v1/discover")
+        .then(function (response) {
+          setDataTable(response?.data?.data);
+        });
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-  // useEffect(() => {
-  //   getDiscover();
-  // }, []);
+  
+
+  useEffect(() => {
+    getDiscover();
+  }, []);
 
   useEffect(() => {
     if (items?.length > 0) {
@@ -85,28 +90,31 @@ const Index = (props) => {
     {
       Header: "Title",
       Footer: "Title",
-      accessor: "title",
+      accessor: "name",
     },
     {
       Header: "Content Type",
       Footer: "Content Type",
-      accessor: "contentType",
+      accessor: "content_type",
     },
     {
       Header: "Content Count",
       Footer: "Content Count",
-      accessor: "contentCount",
+      accessor: "contents",
+      Cell: ({value}) => {
+        return <span> {value?.length} </span>
+      }
     },
     {
       Header: "Creation date",
       Footer: "Creation date",
-      accessor: "creationDate",
+      accessor: "created_at",
     },
-    {
-      Header: "Delete",
-      Footer: "Delete",
-      accessor: "delete",
-    },
+    // {
+    //   Header: "Delete",
+    //   Footer: "Delete",
+    //   accessor: "delete",
+    // },
     {
       Header: "Action",
       Footer: "Action",
@@ -137,6 +145,67 @@ const Index = (props) => {
     console.log(val);
   }, [val]);
 
+  const onDelete = async() => {
+    try {
+      const res = await axios.delete(`http://157.230.35.148:9005/v1/discover/${isForm?.id}`);
+      let {data, status} = res;
+      if(status == 200 || status == 204){
+        await getDiscover()
+        await closeModalEdit()
+      }
+    } catch (error) {
+      let {data} = error?.response;
+      console.log(data)
+    }
+  }
+
+  const onCreate = async() => {
+    setLoading(true)
+    let items = new FormData();
+    items.append('name', isForm?.name)
+    items.append('content_type', radioValue.toUpperCase())
+    
+    try {
+      const res = await axios.post(
+        `http://157.230.35.148:9005/v1/discover`,
+        items
+      );
+      let { data, status } = res;
+      console.log(res);
+      if (status == 200 || status == 201) {
+        console.log(data);
+        // await toast("Created successfully");
+        await getDiscover();
+        await setLoading(false);
+        await closeModalAdd();
+      }
+    } catch (error) {
+      let { data } = error?.response;
+      console.log(data);
+    }
+  }
+
+  const onUpdate = async() => {
+    setLoading(true);
+    let items = new FormData();
+    items.append('name', isForm?.name);
+    items.append('content_type', radioValue.toUpperCase());
+
+    try {
+      const res = await axios.put(`http://157.230.35.148:9005/v1/discover/${isForm?.id}`, items);
+      let {data, status} = res
+      if(status == 200 || status == 201){
+        await setLoading(false)
+        await getDiscover()
+        await closeModalEdit()
+      }
+    } catch (error) {
+      let {data} = error?.response
+      console.log(data)
+    }
+
+  }
+
   return (
     <>
       <Navbar sidebar={sidebar} setSidebar={setSidebar} />
@@ -162,7 +231,7 @@ const Index = (props) => {
           </div>
           <span className="text-lg font-semibold">
             {" "}
-            Tabs ({items?.length}){" "}
+            Tabs ({dataTable?.length}){" "}
           </span>
           <TaskTab options={Menus} value={tab} setValue={setTab}>
             <div className="md:ml-10 w-full md:w-[80%] flex justify-between items-center">
@@ -214,6 +283,7 @@ const Index = (props) => {
             <input
               type="text"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 py-2 duration-500 text-gray-500"
+              onChange={(e) => setIsForm({...isForm, name: e?.target?.value})}
             />
           </div>
 
@@ -225,13 +295,15 @@ const Index = (props) => {
               <div className="flex gap-2 items-center">
                 <input
                   type="radio"
-                  value="Images"
-                  id="Images"
+                  value="Image"
+                  id="Image"
                   name="contentType"
-                  className="text-gray-500 w-4 h-4"
+                  className="text-gray-500 w-4 h-4"                  
+                  onChange={(e) => setRadioValue(e?.target?.value)}
+
                 />
                 <label
-                  htmlFor="Images"
+                  htmlFor="Image"
                   className="font-semibold cursor-pointer"
                 >
                   Images
@@ -240,13 +312,15 @@ const Index = (props) => {
               <div className="flex gap-2 items-center">
                 <input
                   type="radio"
-                  value="Videos"
-                  id="Videos"
+                  value="Video"
+                  id="Video"
                   name="contentType"
                   className="text-gray-500 w-4 h-4 "
+                  onChange={(e) => setRadioValue(e?.target?.value)}
+
                 />
                 <label
-                  htmlFor="Videos"
+                  htmlFor="Video"
                   className="font-semibold cursor-pointer"
                 >
                   Videos
@@ -255,13 +329,15 @@ const Index = (props) => {
               <div className="flex gap-2 items-center">
                 <input
                   type="radio"
-                  value="Articles"
-                  id="Articles"
+                  value="Article"
+                  id="Article"
                   name="contentType"
                   className="text-gray-500 w-4 h-4"
+                  onChange={(e) => setRadioValue(e?.target?.value)}
+
                 />
                 <label
-                  htmlFor="Articles"
+                  htmlFor="Article"
                   className="font-semibold cursor-pointer"
                 >
                   Articles
@@ -281,8 +357,20 @@ const Index = (props) => {
             <Button
               variant="primary"
               className="w-1/2 flex justify-center items-center"
+              onClick={onCreate}
+              disabled={loading}
             >
-              <span className="text-base capitalize w-full "> Create </span>
+              {loading ? (
+                <div className="flex flex-row items-center gap-2 w-full justify-center">
+                  <BiLoaderAlt className="h-5 w-5 animate-spin-slow" />
+                  <span className="text-white font-semibold text-sm">
+                    {" "}
+                    Proccessing{" "}
+                  </span>
+                </div>
+              ) : (
+                <span className="text-base capitalize w-full "> Create </span>
+              )}
             </Button>
           </div>
         </div>
@@ -303,9 +391,9 @@ const Index = (props) => {
             <input
               type="text"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 py-2 duration-500 text-gray-500"
-              value={isForm?.title}
+              value={isForm?.name || ''}
               onChange={(e) =>
-                setIsForm({ ...isForm, title: e?.target?.value })
+                setIsForm({ ...isForm, name: e?.target?.value })
               }
             />
           </div>
@@ -318,15 +406,15 @@ const Index = (props) => {
               <div className="flex gap-2 items-center">
                 <input
                   type="radio"
-                  value="Images"
-                  id="Images"
+                  value="IMAGE"
+                  id="IMAGE"
                   name="contentType"
                   className="text-gray-500 w-4 h-4"
-                  checked={radioValue === "Images"}
+                  checked={radioValue === "IMAGE"}
                   onChange={(e) => setRadioValue(e?.target?.value)}
                 />
                 <label
-                  htmlFor="Images"
+                  htmlFor="IMAGE"
                   className="font-semibold cursor-pointer"
                 >
                   Images
@@ -335,15 +423,15 @@ const Index = (props) => {
               <div className="flex gap-2 items-center">
                 <input
                   type="radio"
-                  value="Videos"
-                  id="Videos"
+                  value="VIDEO"
+                  id="VIDEO"
                   name="contentType"
                   className="text-gray-500 w-4 h-4 "
-                  checked={radioValue === "Videos"}
+                  checked={radioValue === "VIDEO"}
                   onChange={(e) => setRadioValue(e?.target?.value)}
                 />
                 <label
-                  htmlFor="Videos"
+                  htmlFor="VIDEO"
                   className="font-semibold cursor-pointer"
                 >
                   Videos
@@ -352,15 +440,15 @@ const Index = (props) => {
               <div className="flex gap-2 items-center">
                 <input
                   type="radio"
-                  value="Articles"
-                  id="Articles"
+                  value="ARTICLE"
+                  id="ARTICLE"
                   name="contentType"
                   className="text-gray-500 w-4 h-4"
-                  checked={radioValue === "Articles"}
+                  checked={radioValue === "ARTICLE"}
                   onChange={(e) => setRadioValue(e?.target?.value)}
                 />
                 <label
-                  htmlFor="Articles"
+                  htmlFor="ARTICLE"
                   className="font-semibold cursor-pointer"
                 >
                   Articles
@@ -373,7 +461,7 @@ const Index = (props) => {
             <label className="font-bold text-base"> Creation Date </label>
             <span className="text-gray-500 text-base font-semibold">
               {" "}
-              {isForm?.creationDate}{" "}
+              {isForm?.created_at}{" "}
             </span>
           </div>
 
@@ -381,7 +469,7 @@ const Index = (props) => {
             <label className="font-bold text-base"> Content Count </label>
             <span className="text-gray-500 text-base font-semibold">
               {" "}
-              {isForm?.contentCount}{" "}
+              {isForm?.contents?.length}{" "}
             </span>
           </div>
 
@@ -389,15 +477,27 @@ const Index = (props) => {
             <Button
               variant="danger"
               className="w-1/2 flex justify-center items-center"
-              onClick={closeModalEdit}
+              onClick={onDelete}
             >
               <span className="text-base capitalize w-full"> Delete tab </span>
             </Button>
             <Button
               variant="primary"
               className="w-1/2 flex justify-center items-center"
+              onClick={onUpdate}
+              disabled={loading}
             >
-              <span className="text-base capitalize w-full "> Create </span>
+              {loading ? (
+                <div className="flex flex-row items-center gap-2 w-full justify-center">
+                  <BiLoaderAlt className="h-5 w-5 animate-spin-slow" />
+                  <span className="text-white font-semibold text-sm">
+                    {" "}
+                    Proccessing{" "}
+                  </span>
+                </div>
+              ) : (
+                <span className="text-base capitalize w-full "> Save </span>
+              )}
             </Button>
           </div>
         </div>

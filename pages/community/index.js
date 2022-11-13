@@ -15,12 +15,16 @@ import TaskTab from "../../components/button/TaskTab";
 import UploaderBox from "../../components/button/UploaderBox";
 import axios from "axios";
 import { getCookie } from "../../utils/cookie";
-import { toast } from "react-hot-toast";
+import { toast } from "react-toastify";
+
 
 export default function Index(props) {
   let { token } = props;
   const [sidebar, setSidebar] = useState(false);
   const [dataTable, setDataTable] = useState([]);
+  const [userData, setUserData] = useState([]);
+  const [userOpt, setUserOpt] = useState([]);
+  const [selectedUser, setSelectedUser] = useState([]);
   const [oldData, setOldData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pageCount, setPageCount] = useState(1);
@@ -35,6 +39,7 @@ export default function Index(props) {
   const [isForm, setIsForm] = useState({});
   const [opt, setOpt] = useState([]);
   const [val, setVal] = useState([]);
+  const [disabledBtn, setDisabledBtn] = useState(false);
 
   const Menus = [
     {
@@ -44,10 +49,6 @@ export default function Index(props) {
       name: "Inactive",
     },
   ];
-
-  const openToast = () => {
-    toast.success("heeloo");
-  };
 
   const openModalAdd = () => {
     setIsShowAdd(true);
@@ -70,6 +71,25 @@ export default function Index(props) {
     setIsForm({});
   };
 
+  const getUser = async () => {
+    try {
+      await axios.get("http://157.230.35.148:9005/v1/user").then(function (response) {
+        setUserData(response?.data?.data);        
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+
+  useEffect(() => {
+    if(!isForm?.name || !isForm?.description || fileSelected.length == 0){
+      setDisabledBtn(true);
+    }else{
+      setDisabledBtn(false);
+    }
+  }, [isForm, fileSelected])
+
   const getGroup = async () => {
     try {
       axios
@@ -86,6 +106,7 @@ export default function Index(props) {
 
   useEffect(() => {
     getGroup();
+    getUser();
   }, []);
 
   useEffect(() => {
@@ -111,7 +132,7 @@ export default function Index(props) {
       setDataTable(oldData);
       return dataTable;
     }
-  }, [isSearch]);
+  }, [isSearch, dataTable]);
 
   const dateToString = (date) => {
     return new Date(date).toDateString();
@@ -138,11 +159,14 @@ export default function Index(props) {
 
   const onCreate = async () => {
     setLoading(true);
+    let userItems = []
+    selectedUser.forEach((e) => userItems.push({user_id: e?.user_id, is_admin: 1}));
     let items = new FormData()
     items.append('name', isForm?.name);
     items.append('description', isForm?.description)
-    items.append("photos", fileSelected[0], `${fileSelected[0].path}`);
-    
+    items.append("photos", fileSelected[0], `${fileSelected[0]?.path}`);
+    items.append('admins', JSON.stringify(userItems))
+       
     try {
       const res = await axios.post(
         "http://157.230.35.148:9005/v1/group",
@@ -168,8 +192,7 @@ export default function Index(props) {
     let items = new FormData()
     items.append('name', isForm?.name);
     items.append('description', isForm?.description)
-    items.append("new_photos", fileSelected[0], `${fileSelected[0].path}`);
-
+    if(fileSelected.length > 0) items.append("new_photos", fileSelected[0], `${fileSelected[0].path}`);
     // console.log(fileSelected[0].path)
     
     try {
@@ -249,9 +272,31 @@ export default function Index(props) {
     setFileSelected(e);
   };
 
-  const onSelectUser = (e) => {
-    setVal([{ ...val, name: e?.groupName, id: e?.id }]);
+  const onSelectUser = (e) => {        
+    let filter = userOpt.filter((element) => element?.id != e?.id)
+    setUserOpt(filter)
+    if(selectedUser.length > 0){      
+      setSelectedUser([...selectedUser, {name: e?.first_name, label: e?.first_name, user_id: e?.id, is_admin: 1}]);
+    }else{
+      setSelectedUser([{name: e?.first_name, label: e?.first_name, user_id: e?.id, is_admin: 1}])
+    }
   };
+
+  useEffect(() => {
+    let data = []
+    if(userData.length > 0){
+      userData.forEach((e) => {
+        data.push({...e, label: e?.first_name})
+      })
+      setUserOpt(data)
+    }
+  }, [userData])
+  
+  const onRemoveAdmin = (val) => {            
+    let filteredSelectedUser = selectedUser.filter((e) => e?.user_id != val?.user_id)
+    setUserOpt([...userOpt, val])
+    setSelectedUser(filteredSelectedUser)
+  }
 
   return (
     <>
@@ -295,7 +340,7 @@ export default function Index(props) {
                 <Button
                   variant="outlineBlue"
                   className="flex justify-center"
-                  onClick={openToast}
+                  // onClick={() => openToast}
                 >
                   Export as .xlsx
                 </Button>
@@ -355,13 +400,30 @@ export default function Index(props) {
             <UploaderBox files={fileSelected} setFiles={setFileSelected} />
           </div>
 
+          {selectedUser?.length > 0 ? (
+            <div className="w-full flex flex-col gap-2 max-h-40 overflow-auto mb-3">
+            {selectedUser?.map((e) => (
+              <div className="bg-gray-50 py-2 px-4 rounded-md text-gray-500 text-sm flex items-center justify-between" key={e?.user_id}>
+                <span className="font-bold"> {e?.name} </span>
+                <Button
+                  onClick={() => onRemoveAdmin(e)}                                                      
+                >
+                    <MdOutlineDelete className="w-5 h-5 text-gray-500 hover:text-red-500" />
+                </Button>
+              </div>
+            ))}  
+            </div>      
+          ): (
+            <span className="italic font-bold text-sm text-gray-500"> No admin selected </span>
+          )}
+
           <div className="w-full mb-5">
             <label className="font-bold text-base">Admin</label>
             <DefaultSelect
               value={val}
               onChange={(e) => onSelectUser(e)}
               isMulti={false}
-              options={opt}
+              options={userOpt}
             />
             {val?.length > 0 ? (
               <div className="flex flex-col">
@@ -388,7 +450,7 @@ export default function Index(props) {
               variant="primary"
               className="w-1/2 flex justify-center items-center"
               onClick={onCreate}
-              disabled={loading}
+              disabled={disabledBtn || loading}
             >
               {loading ? (
                 <div className="flex flex-row items-center gap-2 w-full justify-center">
@@ -468,8 +530,8 @@ export default function Index(props) {
             )}
             
           </div>
-
-          <div className="w-full mb-5">
+                
+          {/* <div className="w-full mb-5">
             <label className="font-bold text-base">Admin</label>
             <DefaultSelect
               value={val}
@@ -488,9 +550,9 @@ export default function Index(props) {
                 ))}
               </div>
             ) : null}
-          </div>
+          </div> */}
 
-          <div className="w-full mb-10 flex flex-col gap-2">
+          {/* <div className="w-full mb-10 flex flex-col gap-2">
             <label className="font-bold text-base">Admin</label>
             {isForm?.gallery?.length > 0 ? (
               <span> {isForm?.gallery} </span>
@@ -500,14 +562,14 @@ export default function Index(props) {
                 No photos found{" "}
               </span>
             )}
-          </div>
+          </div> */}
 
           <div className="w-full mx-auto flex flex-row gap-3">
             <Button
               variant="danger"
               className="w-1/2 flex justify-center items-center"
               onClick={onDelete}
-            >
+            > 
               <span className="text-base capitalize w-full">
                 {" "}
                 Delete Gorup{" "}

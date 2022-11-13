@@ -1,4 +1,4 @@
-import  { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { AiOutlineEdit } from "react-icons/ai";
 import Button from "../../../components/button";
@@ -13,7 +13,8 @@ import TaskTab from "../../../components/button/TaskTab";
 import UploaderBox from "../../../components/button/UploaderBox";
 import axios from "axios";
 import { getCookie } from "../../../utils/cookie";
-import items from "../../../utils/json/directoryUpload.json";
+
+// import items from "../../../utils/json/directoryUpload.json";
 
 const Index = (props) => {
   let { token, userId } = props;
@@ -34,6 +35,7 @@ const Index = (props) => {
   const [associatesData, setAssociatesData] = useState([]);
   const [chambersData, setChambersData] = useState([]);
   const [radioValue, setRadioValue] = useState("");
+  const [selectedTime, setSelectedTime] = useState('')
 
   const Menus = [
     {
@@ -58,13 +60,13 @@ const Index = (props) => {
     setRadioValue("");
   };
 
-  const openModalEdit = (items) => {
-    let type =
-      items?.category?.charAt(0)?.toUpperCase() + items?.category?.slice(1);
+  const openModalEdit = (items) => {        
+    let time = `${new Date(Number(items?.opening_hours)).getHours()}:${new Date(Number(items?.opening_hours)).getMinutes() > 9 ? new Date(Number(items?.opening_hours)).getMinutes() : 0 + new Date(Number(items?.opening_hours)).getMinutes()}`
     setIsForm(items);
     setIsShowEdit(true);
-    setRadioValue(type);
-    console.log(type);
+    setRadioValue(items?.category);
+    setSelectedTime(time)
+    console.log(time)
   };
 
   const closeModalEdit = () => {
@@ -73,35 +75,35 @@ const Index = (props) => {
   };
 
   useEffect(() => {
-    if (items?.length > 0) {
-      setChurchesData(items.filter((e) => e?.type == "churches"));
-      setAssociatesData(items.filter((e) => e?.type == "associates"));
-      setChambersData(items.filter((e) => e?.type == "chambers"));
+    if (dataTable?.length > 0) {
+      setChurchesData(dataTable.filter((e) => e?.category == " church"));
+      setAssociatesData(dataTable.filter((e) => e?.category == "associate"));
+      setChambersData(dataTable.filter((e) => e?.category == "chamber"));
     } else {
       setDataTable([]);
     }
-  }, [items]);
+  }, [dataTable]);
 
   useEffect(() => {
-    if (items?.length > 0) {
-      let filterAssociates = items.filter(
-        (e) => e?.type == "associates"
+    if (dataTable?.length > 0) {
+      let filterAssociates = dataTable.filter(
+        (e) => e?.category == "associates"
       )?.length;
-      let filterChambers = items.filter((e) => e?.type == "chambers")?.length;
+      let filterChambers = dataTable.filter((e) => e?.category == "chambers")?.length;
       tab == "Churches"
         ? setTotal(churchesData.length)
         : tab == "Associates"
         ? setTotal(filterAssociates)
         : setTotal(filterChambers);
     }
-  }, [items, tab]);
+  }, [dataTable, tab]);
 
   const getDirectory = async () => {
     try {
       axios
-        .get("http://157.230.35.148:9005/v1/directory/church")
+        .get("http://157.230.35.148:9005/v1/directory")
         .then(function (response) {
-          setChurchesData(response?.data?.data);
+          setDataTable(response?.data?.data)
           // setOldData(response?.data?.data);
         });
     } catch (error) {
@@ -172,6 +174,31 @@ const Index = (props) => {
     console.log(val);
   }, [val]);
 
+  const onCreate = async() => {
+    let date = new Date(selectedTime).getTime()
+    let items = new FormData()
+    items.append('name', isForm?.name);
+    items.append('category', radioValue);
+    items.append('description', isForm?.description);
+    items.append('location', isForm?.location);
+    items.append('website_url', isForm?.website_url);
+    items.append('phone', isForm?.phone);
+    items.append('email', isForm?.email);
+    items.append('opening_hours', date);
+
+    try {
+      let res = axios.post(`http://157.230.35.148:9005/v1/directory`, items);
+      let {data, status} = res;
+      if(status == 200 || status == 201){
+        await closeModalAdd()
+      }
+    } catch (error) {
+      let {data} = error?.response
+      console.log(data)
+    }
+
+  }
+
   return (
     <>
       <Navbar sidebar={sidebar} setSidebar={setSidebar} />
@@ -197,7 +224,7 @@ const Index = (props) => {
           </div>
           <span className="text-lg font-semibold">
             {" "}
-            Category ({items?.length}){" "}
+            Category ({dataTable?.length}){" "}
           </span>
           <TaskTab options={Menus} value={tab} setValue={setTab}>
             <div className="md:ml-10 w-full md:w-[70%] flex justify-between items-center">
@@ -275,6 +302,7 @@ const Index = (props) => {
             <input
               type="text"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
+              onChange={(e) => setIsForm({ ...isForm, name: e?.target?.value })}
             />
           </div>
 
@@ -286,15 +314,15 @@ const Index = (props) => {
               <div className="flex gap-2 items-center">
                 <input
                   type="radio"
-                  value="Churches"
-                  id="Churches"
+                  value="church"
+                  id="church"
                   name="contentType"
                   className="text-gray-500 w-4 h-4"
-                  checked={radioValue === "Churches"}
+                  checked={radioValue === "church"}
                   onChange={(e) => setRadioValue(e?.target?.value)}
                 />
                 <label
-                  htmlFor="Churches"
+                  htmlFor="church"
                   className="font-semibold cursor-pointer"
                 >
                   Churches
@@ -303,15 +331,15 @@ const Index = (props) => {
               <div className="flex gap-2 items-center">
                 <input
                   type="radio"
-                  value="Associations"
-                  id="Associations"
+                  value="association"
+                  id="association"
                   name="contentType"
                   className="text-gray-500 w-4 h-4 "
-                  checked={radioValue === "Associations"}
+                  checked={radioValue === "association"}
                   onChange={(e) => setRadioValue(e?.target?.value)}
                 />
                 <label
-                  htmlFor="Associations"
+                  htmlFor="association"
                   className="font-semibold cursor-pointer"
                 >
                   Associations
@@ -320,15 +348,15 @@ const Index = (props) => {
               <div className="flex gap-2 items-center">
                 <input
                   type="radio"
-                  value="Chambers"
-                  id="Chambers"
+                  value="chamber"
+                  id="chamber"
                   name="contentType"
                   className="text-gray-500 w-4 h-4"
-                  checked={radioValue === "Chambers"}
+                  checked={radioValue === "chamber"}
                   onChange={(e) => setRadioValue(e?.target?.value)}
                 />
                 <label
-                  htmlFor="Chambers"
+                  htmlFor="chamber"
                   className="font-semibold cursor-pointer"
                 >
                   Chambers
@@ -344,6 +372,7 @@ const Index = (props) => {
             <textarea
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
               rows="4"
+              onChange={(e) => setIsForm({ ...isForm, description: e?.target?.value })}
             />
           </div>
 
@@ -354,6 +383,7 @@ const Index = (props) => {
             <input
               type="text"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
+              onChange={(e) => setIsForm({ ...isForm, location: e?.target?.value })}
             />
           </div>
 
@@ -364,6 +394,7 @@ const Index = (props) => {
             <input
               type="text"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
+              onChange={(e) => setIsForm({ ...isForm, website_url: e?.target?.value })}
             />
           </div>
 
@@ -374,6 +405,7 @@ const Index = (props) => {
             <input
               type="number"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
+              onChange={(e) => setIsForm({ ...isForm, phone: e?.target?.value })}
             />
           </div>
 
@@ -384,6 +416,7 @@ const Index = (props) => {
             <input
               type="email"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
+              onChange={(e) => setIsForm({ ...isForm, email: e?.target?.value })}
             />
           </div>
 
@@ -391,10 +424,13 @@ const Index = (props) => {
             <label htmlFor="tabName" className="font-bold text-base">
               Opening hours
             </label>
-            <textarea
+
+            <input type="time" className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500" onChange={(e) => setSelectedTime(e?.target?.valueAsDate)}/>
+            {/* <textarea
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
               rows="4"
-            />
+              onChange={(e) => setIsForm({ ...isForm, opening_hours: new Date(e?.target?.value).getTime() })}
+            /> */}
           </div>
 
           <div className="w-full mb-10">
@@ -413,6 +449,7 @@ const Index = (props) => {
             <Button
               variant="primary"
               className="w-1/2 flex justify-center items-center"
+              onClick={onCreate}
             >
               <span className="text-base capitalize w-full "> Upload </span>
             </Button>
@@ -448,15 +485,15 @@ const Index = (props) => {
               <div className="flex gap-2 items-center">
                 <input
                   type="radio"
-                  value="Church"
-                  id="Church"
+                  value="church"
+                  id="church"
                   name="contentType"
                   className="text-gray-500 w-4 h-4"
-                  checked={radioValue === "Church"}
+                  checked={radioValue === "church"}
                   onChange={(e) => setRadioValue(e?.target?.value)}
                 />
                 <label
-                  htmlFor="Church"
+                  htmlFor="church"
                   className="font-semibold cursor-pointer"
                 >
                   Church
@@ -465,15 +502,15 @@ const Index = (props) => {
               <div className="flex gap-2 items-center">
                 <input
                   type="radio"
-                  value="Associations"
-                  id="Associations"
+                  value="association"
+                  id="association"
                   name="contentType"
                   className="text-gray-500 w-4 h-4 "
-                  checked={radioValue === "Associations"}
+                  checked={radioValue === "association"}
                   onChange={(e) => setRadioValue(e?.target?.value)}
                 />
                 <label
-                  htmlFor="Associations"
+                  htmlFor="association"
                   className="font-semibold cursor-pointer"
                 >
                   Associations
@@ -482,15 +519,15 @@ const Index = (props) => {
               <div className="flex gap-2 items-center">
                 <input
                   type="radio"
-                  value="Chambers"
-                  id="Chambers"
+                  value="chamber"
+                  id="chamber"
                   name="contentType"
                   className="text-gray-500 w-4 h-4"
-                  checked={radioValue === "Chambers"}
+                  checked={radioValue === "chamber"}
                   onChange={(e) => setRadioValue(e?.target?.value)}
                 />
                 <label
-                  htmlFor="Chambers"
+                  htmlFor="chamber"
                   className="font-semibold cursor-pointer"
                 >
                   Chambers
@@ -534,8 +571,9 @@ const Index = (props) => {
             <input
               type="text"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
+              value={isForm?.website_url || ''}
               onChange={(e) =>
-                setIsForm({ ...isForm, website: e?.target?.value })
+                setIsForm({ ...isForm, website_url: e?.target?.value })
               }
             />
           </div>
@@ -547,6 +585,7 @@ const Index = (props) => {
             <input
               type="number"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
+              value={isForm?.phone || ''}
               onChange={(e) =>
                 setIsForm({ ...isForm, phone: e?.target?.value })
               }
@@ -560,6 +599,7 @@ const Index = (props) => {
             <input
               type="email"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
+              value={isForm?.email || ''}
               onChange={(e) =>
                 setIsForm({ ...isForm, email: e?.target?.value })
               }
@@ -570,13 +610,12 @@ const Index = (props) => {
             <label htmlFor="tabName" className="font-bold text-base">
               Opening hours
             </label>
-            <textarea
-              className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
-              rows="4"
-              onChange={(e) =>
-                setIsForm({ ...isForm, opening: e?.target?.value })
-              }
+            <input type="time" 
+            className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500" 
+            onChange={(e) => setSelectedTime(e?.target?.value)}
+            value={selectedTime || ''}
             />
+
           </div>
 
           <div className="w-full mb-10">
