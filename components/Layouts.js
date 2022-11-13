@@ -16,7 +16,7 @@ export default function Layouts(props) {
       <Head>
         <title>{title + " | Kingdom Driven"}</title>
         <meta name="description" content={`Kingdom Driven - ${description}`} />        
-        <meta httpEquiv="Content-Security-Policy" content="upgrade-insecure-requests"></meta>
+        {/* <meta httpEquiv="Content-Security-Policy" content="upgrade-insecure-requests"></meta> */}
       </Head>
       <div className="relative flex w-full overflow-y-auto bg-gray-50">
         <Sidebar header={header} sidebar={sidebar} setSidebar={setSidebar} />
