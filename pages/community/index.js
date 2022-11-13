@@ -92,14 +92,13 @@ export default function Index(props) {
     console.log(1, isForm)
   }, [isForm])
 
-  useEffect(() => {
-    if(isSearch != null){
+  useEffect(() => {    
       setDataTable(oldData);
       let filteredUser = dataTable.filter(
         (e) => e?.name.toLowerCase().indexOf(isSearch.toLowerCase()) !== -1
       );
       setDataTable(filteredUser);
-    }    
+    
   }, [isSearch]);
 
   const filteredItem = useMemo(() => {
