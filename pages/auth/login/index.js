@@ -7,7 +7,7 @@ import Head from "next/head";
 import axios from "axios";
 import { useRouter } from "next/router";
 
-export default function login() {
+export default function Login() {
   let router = useRouter();
   const [isForm, setIsForm] = useState({});
   const [loading, setLoading] = useState(false);

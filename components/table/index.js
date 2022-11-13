@@ -181,10 +181,10 @@ const Table = ({ items, Columns, loading, setLoading, totalPages, total }) => {
           className="w-[95%] overflow-hidden rounded-xl"
         >
           <thead className="text-left divide-y dark:divide-gray-700 text-sm font-semibold tracking-wide text-gray-500  border-b border-gray-50 rounded-lg ">
-            {headerGroups.map((headerGroup) => (
-              <tr {...headerGroup.getHeaderGroupProps()}>
-                {headerGroup.headers.map((column) => (
-                  <th {...column.getHeaderProps()} className="px-4 py-6">
+            {headerGroups.map((headerGroup, idx) => (
+              <tr {...headerGroup.getHeaderGroupProps()} key={idx}>
+                {headerGroup.headers.map((column, i) => (
+                  <th {...column.getHeaderProps()} className="px-4 py-6" key={i}>
                     {column.render("Header")}
                     {/* {column.canFilter ? <div>{column.render('Filter')}</div> : null} */}
                   </th>
@@ -197,17 +197,18 @@ const Table = ({ items, Columns, loading, setLoading, totalPages, total }) => {
             {...getTableBodyProps()}
             className="bg-white divide-y dark:divide-gray-700 dark:bg-gray-800 text-gray-700 dark:text-gray-400 text-xs"
           >
-            {page.map((row) => {
+            {page.map((row, idx) => {
               prepareRow(row);
               // console.log(row, 'data')
               return (
-                <tr {...row.getRowProps()}>
-                  {row.cells.map((cell) => {
+                <tr {...row.getRowProps()} key={idx}>
+                  {row.cells.map((cell, i) => {
                     // console.log(cell.row.values, "cek")
                     return (
                       <td
                         {...cell.getCellProps()}
                         className="px-4 py-4 font-semibold text-base"
+                        key={i}
                       >
                         {cell.render("Cell")}
                       </td>

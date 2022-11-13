@@ -10,7 +10,7 @@ import Table from "../../components/table";
 import axios from "axios";
 import { getCookie } from "../../utils/cookie";
 
-const index = (props) => {
+const Index = (props) => {
   let { token, userId } = props;
   const [sidebar, setSidebar] = useState(false);
   const [dataTable, setDataTable] = useState([]);
@@ -270,7 +270,7 @@ const index = (props) => {
   );
 };
 
-export default index;
+export default Index;
 
 export async function getServerSideProps(context) {
   const token = getCookie("token", context.req);

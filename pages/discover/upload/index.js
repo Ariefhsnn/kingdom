@@ -17,7 +17,7 @@ import { getCookie } from "../../../utils/cookie";
 import items from "../../../utils/json/discoverUploads.json";
 import toast from "react-hot-toast";
 
-export default function index(props) {
+export default function Index(props) {
   let { token, userId } = props;
   const [sidebar, setSidebar] = useState(false);
   const [imgData, setImgData] = useState([]);

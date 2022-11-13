@@ -1,3 +1,4 @@
+import { MdEdit, MdOutlineDelete } from "react-icons/md";
 import React, { useEffect, useMemo, useState } from "react";
 
 import { AiOutlineEdit } from "react-icons/ai";
@@ -7,7 +8,6 @@ import DefaultSelect from "../../components/select";
 import { GlobalFilter } from "../../components/table/components/GlobalFilter";
 import Group from "../../utils/json/groups.json";
 import Layouts from "../../components/Layouts";
-import { MdEdit } from "react-icons/md";
 import Modal from "../../components/modal/Modal";
 import Navbar from "../../components/navbar";
 import Table from "../../components/table";
@@ -17,7 +17,7 @@ import axios from "axios";
 import { getCookie } from "../../utils/cookie";
 import { toast } from "react-hot-toast";
 
-export default function index(props) {
+export default function Index(props) {
   let { token } = props;
   const [sidebar, setSidebar] = useState(false);
   const [dataTable, setDataTable] = useState([]);
@@ -28,7 +28,7 @@ export default function index(props) {
   const [total, setTotal] = useState(0);
   const [isSelected, setIsSelected] = useState("");
   const [tab, setTab] = useState("Active");
-  const [isSearch, setIsSearch] = useState("");
+  const [isSearch, setIsSearch] = useState(null);
   const [isShowAdd, setIsShowAdd] = useState(false);
   const [isShowEdit, setIsShowEdit] = useState(false);
   const [fileSelected, setFileSelected] = useState([]);
@@ -75,6 +75,7 @@ export default function index(props) {
       axios
         .get("http://157.230.35.148:9005/v1/group")
         .then(function (response) {
+          console.log(response?.data?.data)
           setDataTable(response?.data?.data);
           setOldData(response?.data?.data);
         });
@@ -88,11 +89,17 @@ export default function index(props) {
   }, []);
 
   useEffect(() => {
-    setDataTable(oldData);
-    let filteredUser = dataTable.filter(
-      (e) => e?.name.toLowerCase().indexOf(isSearch.toLowerCase()) !== -1
-    );
-    setDataTable(filteredUser);
+    console.log(1, isForm)
+  }, [isForm])
+
+  useEffect(() => {
+    if(isSearch != null){
+      setDataTable(oldData);
+      let filteredUser = dataTable.filter(
+        (e) => e?.name.toLowerCase().indexOf(isSearch.toLowerCase()) !== -1
+      );
+      setDataTable(filteredUser);
+    }    
   }, [isSearch]);
 
   const filteredItem = useMemo(() => {
@@ -105,24 +112,77 @@ export default function index(props) {
       setDataTable(oldData);
       return dataTable;
     }
-  }, [isSearch, dataTable]);
+  }, [isSearch]);
 
   const dateToString = (date) => {
     return new Date(date).toDateString();
   };
 
-  const onCreate = async () => {
+  const onDelete = async() => {
     await setLoading(true);
+    try{
+      const res = await axios.delete(`http://157.230.35.148:9005/v1/group/${isForm?.id}`);
+      let {data, status} = res
+      if(status == 204 || status == 200){
+        await toast.success('Deleted successfully');
+        await getGroup()
+        await setLoading(false)
+        await closeModalEdit();
+      }else{
+        throw data;
+      }
+    }catch(error){
+      let {data, status} = error?.response;
+      toast.error(data)
+    }
+  }
+
+  const onCreate = async () => {
+    setLoading(true);
+    let items = new FormData()
+    items.append('name', isForm?.name);
+    items.append('description', isForm?.description)
+    items.append("photos", fileSelected[0], `${fileSelected[0].path}`);
+    
     try {
       const res = await axios.post(
         "http://157.230.35.148:9005/v1/group",
-        isForm
+        items
       );
       let { data, status } = res;
       console.log(res);
       if (status == 200 || status == 201) {
         console.log(data);
         await toast("Created successfully");
+        await getGroup();
+        await setLoading(false);
+        await closeModalAdd();
+      }
+    } catch (error) {
+      let { data } = error?.response;
+      console.log(data);
+    }
+  };
+
+  const onUpdate = async () => {
+    await setLoading(true);
+    let items = new FormData()
+    items.append('name', isForm?.name);
+    items.append('description', isForm?.description)
+    items.append("new_photos", fileSelected[0], `${fileSelected[0].path}`);
+
+    // console.log(fileSelected[0].path)
+    
+    try {
+      const res = await axios.put(
+        `http://157.230.35.148:9005/v1/group/${isForm?.id}`,
+        items
+      );
+      let { data, status } = res;
+      console.log(res);
+      if (status == 200 || status == 201) {
+        console.log(data);
+        await toast("Updated successfully");
         await getGroup();
         await setLoading(false);
         await closeModalAdd();
@@ -155,6 +215,9 @@ export default function index(props) {
       Header: "Members",
       Footer: "Members",
       accessor: "members",
+      Cell: ({value}) => {
+        return <span> {value?.length} </span>
+      }
     },
     {
       Header: "Creation date",
@@ -164,11 +227,11 @@ export default function index(props) {
         return <span> {dateToString(value)}</span>;
       },
     },
-    {
-      Header: "Terminate",
-      Footer: "Terminate",
-      accessor: "Terminate",
-    },
+    // {
+    //   Header: "Terminate",
+    //   Footer: "Terminate",
+    //   accessor: "Terminate",
+    // },
     {
       Header: "Action",
       Footer: "Action",
@@ -293,7 +356,7 @@ export default function index(props) {
             <UploaderBox files={fileSelected} setFiles={setFileSelected} />
           </div>
 
-          {/* <div className="w-full mb-5">
+          <div className="w-full mb-5">
             <label className="font-bold text-base">Admin</label>
             <DefaultSelect
               value={val}
@@ -304,15 +367,15 @@ export default function index(props) {
             {val?.length > 0 ? (
               <div className="flex flex-col">
                 {val?.map((element) => (
-                  <div className="bg-gray-50 rounded p-2 mt-2">
-                    <span className="text-gray-500" key={element?.name}>
+                  <div className="bg-gray-50 rounded p-2 mt-2" key={element?.name}>
+                    <span className="text-gray-500" >
                       {element?.name}
                     </span>
                   </div>
                 ))}
               </div>
             ) : null}
-          </div> */}
+          </div>
 
           <div className="w-2/3 mx-auto flex flex-row gap-3">
             <Button
@@ -359,7 +422,7 @@ export default function index(props) {
             <input
               type="text"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
-              value={isForm?.name}
+              value={isForm?.name || ''}
               onChange={(e) => setIsForm({ ...isForm, name: e?.target?.value })}
             />
           </div>
@@ -370,7 +433,7 @@ export default function index(props) {
             <textarea
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
               rows="4"
-              value={isForm?.description}
+              value={isForm?.description || ''}
               onChange={(e) =>
                 setIsForm({ ...isForm, description: e?.target?.value })
               }
@@ -392,10 +455,19 @@ export default function index(props) {
 
           <div className="w-full mb-5 flex flex-col gap-1">
             <label className="font-bold text-base"> Members </label>
-            <span className="text-gray-500 text-base font-semibold">
-              {" "}
-              {isForm?.members}{" "}
-            </span>
+            {isForm?.members?.length > 0 ? isForm?.members?.map((e) => (
+              <div className="bg-gray-100 py-2 px-4 rounded-md text-gray-500 text-base font-semibold flex flex-row justify-between" key={e?.id}>
+               <span> {e?.first_name} </span>
+               <button>
+               <MdOutlineDelete className="h-5 w-5 hover:text-red-500" />
+               </button>
+            </div>
+            )):(
+              <>
+            <span className="text-gray-500 italic w-full text-center text-sm font-bold"> No members found </span>
+              </>
+            )}
+            
           </div>
 
           <div className="w-full mb-5">
@@ -409,8 +481,8 @@ export default function index(props) {
             {val?.length > 0 ? (
               <div className="flex flex-col">
                 {val?.map((element) => (
-                  <div className="bg-gray-50 rounded p-2 mt-2">
-                    <span className="text-gray-500" key={element?.name}>
+                  <div className="bg-gray-50 rounded p-2 mt-2" key={element?.name}>
+                    <span className="text-gray-500" >
                       {element?.name}
                     </span>
                   </div>
@@ -435,7 +507,7 @@ export default function index(props) {
             <Button
               variant="danger"
               className="w-1/2 flex justify-center items-center"
-              onClick={closeModalEdit}
+              onClick={onDelete}
             >
               <span className="text-base capitalize w-full">
                 {" "}
@@ -445,8 +517,9 @@ export default function index(props) {
             <Button
               variant="primary"
               className="w-1/2 flex justify-center items-center"
+              onClick={onUpdate}
             >
-              <span className="text-base capitalize w-full "> Create </span>
+              <span className="text-base capitalize w-full "> Save </span>
             </Button>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import  {useEffect, useState} from "react";
+import  { useEffect, useState } from "react";
 
 import { AiOutlineEdit } from "react-icons/ai";
 import Button from "../../../components/button";
@@ -15,7 +15,7 @@ import axios from "axios";
 import { getCookie } from "../../../utils/cookie";
 import items from "../../../utils/json/directoryUpload.json";
 
-const index = (props) => {
+const Index = (props) => {
   let { token, userId } = props;
   const [sidebar, setSidebar] = useState(false);
   const [dataTable, setDataTable] = useState([]);
@@ -605,7 +605,7 @@ const index = (props) => {
   );
 };
 
-export default index;
+export default Index;
 
 export async function getServerSideProps(context) {
   const token = getCookie("token", context.req);
