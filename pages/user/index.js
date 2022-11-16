@@ -44,7 +44,7 @@ const Index = (props) => {
 
   const getUser = async () => {
     try {
-      axios.get("http://157.230.35.148:9005/v1/user").then(function (response) {
+      axios.get("https://kingdom-api-dev.gbempower.asia/v1/user").then(function (response) {
         setDataTable(response?.data?.data);
         setOldData(response?.data?.data);
         setTotal(response?.data?.data?.length);

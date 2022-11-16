@@ -17,7 +17,6 @@ import axios from "axios";
 import { getCookie } from "../../utils/cookie";
 import { toast } from "react-toastify";
 
-
 export default function Index(props) {
   let { token } = props;
   const [sidebar, setSidebar] = useState(false);
@@ -73,29 +72,30 @@ export default function Index(props) {
 
   const getUser = async () => {
     try {
-      await axios.get("http://157.230.35.148:9005/v1/user").then(function (response) {
-        setUserData(response?.data?.data);        
-      });
+      await axios
+        .get("https://kingdom-api-dev.gbempower.asia/v1/user")
+        .then(function (response) {
+          setUserData(response?.data?.data);
+        });
     } catch (error) {
       console.log(error);
     }
   };
 
-
   useEffect(() => {
-    if(!isForm?.name || !isForm?.description || fileSelected.length == 0){
+    if (!isForm?.name || !isForm?.description || fileSelected.length == 0) {
       setDisabledBtn(true);
-    }else{
+    } else {
       setDisabledBtn(false);
     }
-  }, [isForm, fileSelected])
+  }, [isForm, fileSelected]);
 
   const getGroup = async () => {
     try {
       axios
-        .get("http://157.230.35.148:9005/v1/group")
+        .get("https://kingdom-api-dev.gbempower.asia/v1/group")
         .then(function (response) {
-          console.log(response?.data?.data)
+          console.log(response?.data?.data);
           setDataTable(response?.data?.data);
           setOldData(response?.data?.data);
         });
@@ -110,16 +110,15 @@ export default function Index(props) {
   }, []);
 
   useEffect(() => {
-    console.log(1, isForm)
-  }, [isForm])
+    console.log(1, isForm);
+  }, [isForm]);
 
-  useEffect(() => {    
-      setDataTable(oldData);
-      let filteredUser = dataTable.filter(
-        (e) => e?.name.toLowerCase().indexOf(isSearch.toLowerCase()) !== -1
-      );
-      setDataTable(filteredUser);
-    
+  useEffect(() => {
+    setDataTable(oldData);
+    let filteredUser = dataTable.filter(
+      (e) => e?.name.toLowerCase().indexOf(isSearch.toLowerCase()) !== -1
+    );
+    setDataTable(filteredUser);
   }, [isSearch]);
 
   const filteredItem = useMemo(() => {
@@ -138,38 +137,42 @@ export default function Index(props) {
     return new Date(date).toDateString();
   };
 
-  const onDelete = async() => {
+  const onDelete = async () => {
     await setLoading(true);
-    try{
-      const res = await axios.delete(`http://157.230.35.148:9005/v1/group/${isForm?.id}`);
-      let {data, status} = res
-      if(status == 204 || status == 200){
-        await toast.success('Deleted successfully');
-        await getGroup()
-        await setLoading(false)
+    try {
+      const res = await axios.delete(
+        `https://kingdom-api-dev.gbempower.asia/v1/group/${isForm?.id}`
+      );
+      let { data, status } = res;
+      if (status == 204 || status == 200) {
+        await toast.success("Deleted successfully");
+        await getGroup();
+        await setLoading(false);
         await closeModalEdit();
-      }else{
+      } else {
         throw data;
       }
-    }catch(error){
-      let {data, status} = error?.response;
-      toast.error(data)
+    } catch (error) {
+      let { data, status } = error?.response;
+      toast.error(data);
     }
-  }
+  };
 
   const onCreate = async () => {
     setLoading(true);
-    let userItems = []
-    selectedUser.forEach((e) => userItems.push({user_id: e?.user_id, is_admin: 1}));
-    let items = new FormData()
-    items.append('name', isForm?.name);
-    items.append('description', isForm?.description)
+    let userItems = [];
+    selectedUser.forEach((e) =>
+      userItems.push({ user_id: e?.user_id, is_admin: 1 })
+    );
+    let items = new FormData();
+    items.append("name", isForm?.name);
+    items.append("description", isForm?.description);
     items.append("photos", fileSelected[0], `${fileSelected[0]?.path}`);
-    items.append('admins', JSON.stringify(userItems))
-       
+    items.append("admins", JSON.stringify(userItems));
+
     try {
       const res = await axios.post(
-        "http://157.230.35.148:9005/v1/group",
+        "https://kingdom-api-dev.gbempower.asia/v1/group",
         items
       );
       let { data, status } = res;
@@ -189,15 +192,16 @@ export default function Index(props) {
 
   const onUpdate = async () => {
     await setLoading(true);
-    let items = new FormData()
-    items.append('name', isForm?.name);
-    items.append('description', isForm?.description)
-    if(fileSelected.length > 0) items.append("new_photos", fileSelected[0], `${fileSelected[0].path}`);
+    let items = new FormData();
+    items.append("name", isForm?.name);
+    items.append("description", isForm?.description);
+    if (fileSelected.length > 0)
+      items.append("new_photos", fileSelected[0], `${fileSelected[0].path}`);
     // console.log(fileSelected[0].path)
-    
+
     try {
       const res = await axios.put(
-        `http://157.230.35.148:9005/v1/group/${isForm?.id}`,
+        `https://kingdom-api-dev.gbempower.asia/v1/group/${isForm?.id}`,
         items
       );
       let { data, status } = res;
@@ -237,9 +241,9 @@ export default function Index(props) {
       Header: "Members",
       Footer: "Members",
       accessor: "members",
-      Cell: ({value}) => {
-        return <span> {value?.length} </span>
-      }
+      Cell: ({ value }) => {
+        return <span> {value?.length} </span>;
+      },
     },
     {
       Header: "Creation date",
@@ -272,31 +276,48 @@ export default function Index(props) {
     setFileSelected(e);
   };
 
-  const onSelectUser = (e) => {        
-    let filter = userOpt.filter((element) => element?.id != e?.id)
-    setUserOpt(filter)
-    if(selectedUser.length > 0){      
-      setSelectedUser([...selectedUser, {name: e?.first_name, label: e?.first_name, user_id: e?.id, is_admin: 1}]);
-    }else{
-      setSelectedUser([{name: e?.first_name, label: e?.first_name, user_id: e?.id, is_admin: 1}])
+  const onSelectUser = (e) => {
+    let filter = userOpt.filter((element) => element?.id != e?.id);
+    setUserOpt(filter);
+    if (selectedUser.length > 0) {
+      setSelectedUser([
+        ...selectedUser,
+        {
+          name: e?.first_name,
+          label: e?.first_name,
+          user_id: e?.id,
+          is_admin: 1,
+        },
+      ]);
+    } else {
+      setSelectedUser([
+        {
+          name: e?.first_name,
+          label: e?.first_name,
+          user_id: e?.id,
+          is_admin: 1,
+        },
+      ]);
     }
   };
 
   useEffect(() => {
-    let data = []
-    if(userData.length > 0){
+    let data = [];
+    if (userData.length > 0) {
       userData.forEach((e) => {
-        data.push({...e, label: e?.first_name})
-      })
-      setUserOpt(data)
+        data.push({ ...e, label: e?.first_name });
+      });
+      setUserOpt(data);
     }
-  }, [userData])
-  
-  const onRemoveAdmin = (val) => {            
-    let filteredSelectedUser = selectedUser.filter((e) => e?.user_id != val?.user_id)
-    setUserOpt([...userOpt, val])
-    setSelectedUser(filteredSelectedUser)
-  }
+  }, [userData]);
+
+  const onRemoveAdmin = (val) => {
+    let filteredSelectedUser = selectedUser.filter(
+      (e) => e?.user_id != val?.user_id
+    );
+    setUserOpt([...userOpt, val]);
+    setSelectedUser(filteredSelectedUser);
+  };
 
   return (
     <>
@@ -402,19 +423,23 @@ export default function Index(props) {
 
           {selectedUser?.length > 0 ? (
             <div className="w-full flex flex-col gap-2 max-h-40 overflow-auto mb-3">
-            {selectedUser?.map((e) => (
-              <div className="bg-gray-50 py-2 px-4 rounded-md text-gray-500 text-sm flex items-center justify-between" key={e?.user_id}>
-                <span className="font-bold"> {e?.name} </span>
-                <Button
-                  onClick={() => onRemoveAdmin(e)}                                                      
+              {selectedUser?.map((e) => (
+                <div
+                  className="bg-gray-50 py-2 px-4 rounded-md text-gray-500 text-sm flex items-center justify-between"
+                  key={e?.user_id}
                 >
+                  <span className="font-bold"> {e?.name} </span>
+                  <Button onClick={() => onRemoveAdmin(e)}>
                     <MdOutlineDelete className="w-5 h-5 text-gray-500 hover:text-red-500" />
-                </Button>
-              </div>
-            ))}  
-            </div>      
-          ): (
-            <span className="italic font-bold text-sm text-gray-500"> No admin selected </span>
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <span className="italic font-bold text-sm text-gray-500">
+              {" "}
+              No admin selected{" "}
+            </span>
           )}
 
           <div className="w-full mb-5">
@@ -428,10 +453,11 @@ export default function Index(props) {
             {val?.length > 0 ? (
               <div className="flex flex-col">
                 {val?.map((element) => (
-                  <div className="bg-gray-50 rounded p-2 mt-2" key={element?.name}>
-                    <span className="text-gray-500" >
-                      {element?.name}
-                    </span>
+                  <div
+                    className="bg-gray-50 rounded p-2 mt-2"
+                    key={element?.name}
+                  >
+                    <span className="text-gray-500">{element?.name}</span>
                   </div>
                 ))}
               </div>
@@ -483,7 +509,7 @@ export default function Index(props) {
             <input
               type="text"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
-              value={isForm?.name || ''}
+              value={isForm?.name || ""}
               onChange={(e) => setIsForm({ ...isForm, name: e?.target?.value })}
             />
           </div>
@@ -494,7 +520,7 @@ export default function Index(props) {
             <textarea
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
               rows="4"
-              value={isForm?.description || ''}
+              value={isForm?.description || ""}
               onChange={(e) =>
                 setIsForm({ ...isForm, description: e?.target?.value })
               }
@@ -516,21 +542,28 @@ export default function Index(props) {
 
           <div className="w-full mb-5 flex flex-col gap-1">
             <label className="font-bold text-base"> Members </label>
-            {isForm?.members?.length > 0 ? isForm?.members?.map((e) => (
-              <div className="bg-gray-100 py-2 px-4 rounded-md text-gray-500 text-base font-semibold flex flex-row justify-between" key={e?.id}>
-               <span> {e?.first_name} </span>
-               <button>
-               <MdOutlineDelete className="h-5 w-5 hover:text-red-500" />
-               </button>
-            </div>
-            )):(
+            {isForm?.members?.length > 0 ? (
+              isForm?.members?.map((e) => (
+                <div
+                  className="bg-gray-100 py-2 px-4 rounded-md text-gray-500 text-base font-semibold flex flex-row justify-between"
+                  key={e?.id}
+                >
+                  <span> {e?.first_name} </span>
+                  <button>
+                    <MdOutlineDelete className="h-5 w-5 hover:text-red-500" />
+                  </button>
+                </div>
+              ))
+            ) : (
               <>
-            <span className="text-gray-500 italic w-full text-center text-sm font-bold"> No members found </span>
+                <span className="text-gray-500 italic w-full text-center text-sm font-bold">
+                  {" "}
+                  No members found{" "}
+                </span>
               </>
             )}
-            
           </div>
-                
+
           {/* <div className="w-full mb-5">
             <label className="font-bold text-base">Admin</label>
             <DefaultSelect
@@ -569,7 +602,7 @@ export default function Index(props) {
               variant="danger"
               className="w-1/2 flex justify-center items-center"
               onClick={onDelete}
-            > 
+            >
               <span className="text-base capitalize w-full">
                 {" "}
                 Delete Gorup{" "}

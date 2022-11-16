@@ -35,7 +35,7 @@ const Index = (props) => {
   const [associatesData, setAssociatesData] = useState([]);
   const [chambersData, setChambersData] = useState([]);
   const [radioValue, setRadioValue] = useState("");
-  const [selectedTime, setSelectedTime] = useState('')
+  const [selectedTime, setSelectedTime] = useState("");
 
   const Menus = [
     {
@@ -60,13 +60,17 @@ const Index = (props) => {
     setRadioValue("");
   };
 
-  const openModalEdit = (items) => {        
-    let time = `${new Date(Number(items?.opening_hours)).getHours()}:${new Date(Number(items?.opening_hours)).getMinutes() > 9 ? new Date(Number(items?.opening_hours)).getMinutes() : 0 + new Date(Number(items?.opening_hours)).getMinutes()}`
+  const openModalEdit = (items) => {
+    let time = `${new Date(Number(items?.opening_hours)).getHours()}:${
+      new Date(Number(items?.opening_hours)).getMinutes() > 9
+        ? new Date(Number(items?.opening_hours)).getMinutes()
+        : 0 + new Date(Number(items?.opening_hours)).getMinutes()
+    }`;
     setIsForm(items);
     setIsShowEdit(true);
     setRadioValue(items?.category);
-    setSelectedTime(time)
-    console.log(time)
+    setSelectedTime(time);
+    console.log(time);
   };
 
   const closeModalEdit = () => {
@@ -89,7 +93,9 @@ const Index = (props) => {
       let filterAssociates = dataTable.filter(
         (e) => e?.category == "associates"
       )?.length;
-      let filterChambers = dataTable.filter((e) => e?.category == "chambers")?.length;
+      let filterChambers = dataTable.filter(
+        (e) => e?.category == "chambers"
+      )?.length;
       tab == "Churches"
         ? setTotal(churchesData.length)
         : tab == "Associates"
@@ -101,9 +107,9 @@ const Index = (props) => {
   const getDirectory = async () => {
     try {
       axios
-        .get("http://157.230.35.148:9005/v1/directory")
+        .get("https://kingdom-api-dev.gbempower.asia/v1/directory")
         .then(function (response) {
-          setDataTable(response?.data?.data)
+          setDataTable(response?.data?.data);
           // setOldData(response?.data?.data);
         });
     } catch (error) {
@@ -174,30 +180,32 @@ const Index = (props) => {
     console.log(val);
   }, [val]);
 
-  const onCreate = async() => {
-    let date = new Date(selectedTime).getTime()
-    let items = new FormData()
-    items.append('name', isForm?.name);
-    items.append('category', radioValue);
-    items.append('description', isForm?.description);
-    items.append('location', isForm?.location);
-    items.append('website_url', isForm?.website_url);
-    items.append('phone', isForm?.phone);
-    items.append('email', isForm?.email);
-    items.append('opening_hours', date);
+  const onCreate = async () => {
+    let date = new Date(selectedTime).getTime();
+    let items = new FormData();
+    items.append("name", isForm?.name);
+    items.append("category", radioValue);
+    items.append("description", isForm?.description);
+    items.append("location", isForm?.location);
+    items.append("website_url", isForm?.website_url);
+    items.append("phone", isForm?.phone);
+    items.append("email", isForm?.email);
+    items.append("opening_hours", date);
 
     try {
-      let res = axios.post(`http://157.230.35.148:9005/v1/directory`, items);
-      let {data, status} = res;
-      if(status == 200 || status == 201){
-        await closeModalAdd()
+      let res = axios.post(
+        `https://kingdom-api-dev.gbempower.asia/v1/directory`,
+        items
+      );
+      let { data, status } = res;
+      if (status == 200 || status == 201) {
+        await closeModalAdd();
       }
     } catch (error) {
-      let {data} = error?.response
-      console.log(data)
+      let { data } = error?.response;
+      console.log(data);
     }
-
-  }
+  };
 
   return (
     <>
@@ -372,7 +380,9 @@ const Index = (props) => {
             <textarea
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
               rows="4"
-              onChange={(e) => setIsForm({ ...isForm, description: e?.target?.value })}
+              onChange={(e) =>
+                setIsForm({ ...isForm, description: e?.target?.value })
+              }
             />
           </div>
 
@@ -383,7 +393,9 @@ const Index = (props) => {
             <input
               type="text"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
-              onChange={(e) => setIsForm({ ...isForm, location: e?.target?.value })}
+              onChange={(e) =>
+                setIsForm({ ...isForm, location: e?.target?.value })
+              }
             />
           </div>
 
@@ -394,7 +406,9 @@ const Index = (props) => {
             <input
               type="text"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
-              onChange={(e) => setIsForm({ ...isForm, website_url: e?.target?.value })}
+              onChange={(e) =>
+                setIsForm({ ...isForm, website_url: e?.target?.value })
+              }
             />
           </div>
 
@@ -405,7 +419,9 @@ const Index = (props) => {
             <input
               type="number"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
-              onChange={(e) => setIsForm({ ...isForm, phone: e?.target?.value })}
+              onChange={(e) =>
+                setIsForm({ ...isForm, phone: e?.target?.value })
+              }
             />
           </div>
 
@@ -416,7 +432,9 @@ const Index = (props) => {
             <input
               type="email"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
-              onChange={(e) => setIsForm({ ...isForm, email: e?.target?.value })}
+              onChange={(e) =>
+                setIsForm({ ...isForm, email: e?.target?.value })
+              }
             />
           </div>
 
@@ -425,7 +443,11 @@ const Index = (props) => {
               Opening hours
             </label>
 
-            <input type="time" className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500" onChange={(e) => setSelectedTime(e?.target?.valueAsDate)}/>
+            <input
+              type="time"
+              className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
+              onChange={(e) => setSelectedTime(e?.target?.valueAsDate)}
+            />
             {/* <textarea
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
               rows="4"
@@ -571,7 +593,7 @@ const Index = (props) => {
             <input
               type="text"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
-              value={isForm?.website_url || ''}
+              value={isForm?.website_url || ""}
               onChange={(e) =>
                 setIsForm({ ...isForm, website_url: e?.target?.value })
               }
@@ -585,7 +607,7 @@ const Index = (props) => {
             <input
               type="number"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
-              value={isForm?.phone || ''}
+              value={isForm?.phone || ""}
               onChange={(e) =>
                 setIsForm({ ...isForm, phone: e?.target?.value })
               }
@@ -599,7 +621,7 @@ const Index = (props) => {
             <input
               type="email"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
-              value={isForm?.email || ''}
+              value={isForm?.email || ""}
               onChange={(e) =>
                 setIsForm({ ...isForm, email: e?.target?.value })
               }
@@ -610,12 +632,12 @@ const Index = (props) => {
             <label htmlFor="tabName" className="font-bold text-base">
               Opening hours
             </label>
-            <input type="time" 
-            className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500" 
-            onChange={(e) => setSelectedTime(e?.target?.value)}
-            value={selectedTime || ''}
+            <input
+              type="time"
+              className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
+              onChange={(e) => setSelectedTime(e?.target?.value)}
+              value={selectedTime || ""}
             />
-
           </div>
 
           <div className="w-full mb-10">

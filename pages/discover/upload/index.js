@@ -85,7 +85,7 @@ export default function Index(props) {
   const getDiscover = async () => {
     try {
       axios
-        .get("http://157.230.35.148:9005/v1/discover-content")
+        .get("https://kingdom-api-dev.gbempower.asia/v1/discover-content")
         .then(function (response) {
           setDataTable(response?.data?.data);
           // setImgData(response?.data?.data?.image);
@@ -272,35 +272,33 @@ export default function Index(props) {
     );
   };
 
-  const onUpload = async () => {    
-      // await setLoading(true);
-      // let items = new FormData();
-      // items.append('title', isForm?.title)
-      // items.append('description', isForm)
-      // const config = {
-      //   headers: {
-      //     "Content-Type": "multipart/form-data",
-      //     Authorization: `Bearer ${token}`,
-      //   },
-      // };
-
-      // dataImage.append("images", fileSelected[0], `${fileSelected[0].path}`);
-      // try {
-      //   const res = await axios.post(
-      //     "http://157.230.35.148:9005/v1/discover-content",
-      //     data,
-      //     config
-      //   );
-      //   let { status, data } = res;
-      //   if (status == 200 || status == 201) {
-      //     await toast("Data succesfully added!");
-      //     await getDiscover();
-      //     await closeModalAdd();
-      //   }
-      // } catch (error) {
-      //   console.log(error?.response);
-      // }
-    
+  const onUpload = async () => {
+    // await setLoading(true);
+    // let items = new FormData();
+    // items.append('title', isForm?.title)
+    // items.append('description', isForm)
+    // const config = {
+    //   headers: {
+    //     "Content-Type": "multipart/form-data",
+    //     Authorization: `Bearer ${token}`,
+    //   },
+    // };
+    // dataImage.append("images", fileSelected[0], `${fileSelected[0].path}`);
+    // try {
+    //   const res = await axios.post(
+    //     "https://kingdom-api-dev.gbempower.asia/v1/discover-content",
+    //     data,
+    //     config
+    //   );
+    //   let { status, data } = res;
+    //   if (status == 200 || status == 201) {
+    //     await toast("Data succesfully added!");
+    //     await getDiscover();
+    //     await closeModalAdd();
+    //   }
+    // } catch (error) {
+    //   console.log(error?.response);
+    // }
   };
 
   return (

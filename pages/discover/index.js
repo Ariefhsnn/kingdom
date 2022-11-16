@@ -62,7 +62,7 @@ const Index = (props) => {
   const getDiscover = async () => {
     try {
       axios
-        .get("http://157.230.35.148:9005/v1/discover")
+        .get("https://kingdom-api-dev.gbempower.asia/v1/discover")
         .then(function (response) {
           setDataTable(response?.data?.data);
         });
@@ -70,8 +70,6 @@ const Index = (props) => {
       console.log(error);
     }
   };
-
-  
 
   useEffect(() => {
     getDiscover();
@@ -101,9 +99,9 @@ const Index = (props) => {
       Header: "Content Count",
       Footer: "Content Count",
       accessor: "contents",
-      Cell: ({value}) => {
-        return <span> {value?.length} </span>
-      }
+      Cell: ({ value }) => {
+        return <span> {value?.length} </span>;
+      },
     },
     {
       Header: "Creation date",
@@ -145,29 +143,31 @@ const Index = (props) => {
     console.log(val);
   }, [val]);
 
-  const onDelete = async() => {
+  const onDelete = async () => {
     try {
-      const res = await axios.delete(`http://157.230.35.148:9005/v1/discover/${isForm?.id}`);
-      let {data, status} = res;
-      if(status == 200 || status == 204){
-        await getDiscover()
-        await closeModalEdit()
+      const res = await axios.delete(
+        `https://kingdom-api-dev.gbempower.asia/v1/discover/${isForm?.id}`
+      );
+      let { data, status } = res;
+      if (status == 200 || status == 204) {
+        await getDiscover();
+        await closeModalEdit();
       }
     } catch (error) {
-      let {data} = error?.response;
-      console.log(data)
+      let { data } = error?.response;
+      console.log(data);
     }
-  }
+  };
 
-  const onCreate = async() => {
-    setLoading(true)
+  const onCreate = async () => {
+    setLoading(true);
     let items = new FormData();
-    items.append('name', isForm?.name)
-    items.append('content_type', radioValue.toUpperCase())
-    
+    items.append("name", isForm?.name);
+    items.append("content_type", radioValue.toUpperCase());
+
     try {
       const res = await axios.post(
-        `http://157.230.35.148:9005/v1/discover`,
+        `https://kingdom-api-dev.gbempower.asia/v1/discover`,
         items
       );
       let { data, status } = res;
@@ -183,28 +183,30 @@ const Index = (props) => {
       let { data } = error?.response;
       console.log(data);
     }
-  }
+  };
 
-  const onUpdate = async() => {
+  const onUpdate = async () => {
     setLoading(true);
     let items = new FormData();
-    items.append('name', isForm?.name);
-    items.append('content_type', radioValue.toUpperCase());
+    items.append("name", isForm?.name);
+    items.append("content_type", radioValue.toUpperCase());
 
     try {
-      const res = await axios.put(`http://157.230.35.148:9005/v1/discover/${isForm?.id}`, items);
-      let {data, status} = res
-      if(status == 200 || status == 201){
-        await setLoading(false)
-        await getDiscover()
-        await closeModalEdit()
+      const res = await axios.put(
+        `https://kingdom-api-dev.gbempower.asia/v1/discover/${isForm?.id}`,
+        items
+      );
+      let { data, status } = res;
+      if (status == 200 || status == 201) {
+        await setLoading(false);
+        await getDiscover();
+        await closeModalEdit();
       }
     } catch (error) {
-      let {data} = error?.response
-      console.log(data)
+      let { data } = error?.response;
+      console.log(data);
     }
-
-  }
+  };
 
   return (
     <>
@@ -283,7 +285,7 @@ const Index = (props) => {
             <input
               type="text"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 py-2 duration-500 text-gray-500"
-              onChange={(e) => setIsForm({...isForm, name: e?.target?.value})}
+              onChange={(e) => setIsForm({ ...isForm, name: e?.target?.value })}
             />
           </div>
 
@@ -298,14 +300,10 @@ const Index = (props) => {
                   value="Image"
                   id="Image"
                   name="contentType"
-                  className="text-gray-500 w-4 h-4"                  
+                  className="text-gray-500 w-4 h-4"
                   onChange={(e) => setRadioValue(e?.target?.value)}
-
                 />
-                <label
-                  htmlFor="Image"
-                  className="font-semibold cursor-pointer"
-                >
+                <label htmlFor="Image" className="font-semibold cursor-pointer">
                   Images
                 </label>
               </div>
@@ -317,12 +315,8 @@ const Index = (props) => {
                   name="contentType"
                   className="text-gray-500 w-4 h-4 "
                   onChange={(e) => setRadioValue(e?.target?.value)}
-
                 />
-                <label
-                  htmlFor="Video"
-                  className="font-semibold cursor-pointer"
-                >
+                <label htmlFor="Video" className="font-semibold cursor-pointer">
                   Videos
                 </label>
               </div>
@@ -334,7 +328,6 @@ const Index = (props) => {
                   name="contentType"
                   className="text-gray-500 w-4 h-4"
                   onChange={(e) => setRadioValue(e?.target?.value)}
-
                 />
                 <label
                   htmlFor="Article"
@@ -391,10 +384,8 @@ const Index = (props) => {
             <input
               type="text"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 py-2 duration-500 text-gray-500"
-              value={isForm?.name || ''}
-              onChange={(e) =>
-                setIsForm({ ...isForm, name: e?.target?.value })
-              }
+              value={isForm?.name || ""}
+              onChange={(e) => setIsForm({ ...isForm, name: e?.target?.value })}
             />
           </div>
 
@@ -413,10 +404,7 @@ const Index = (props) => {
                   checked={radioValue === "IMAGE"}
                   onChange={(e) => setRadioValue(e?.target?.value)}
                 />
-                <label
-                  htmlFor="IMAGE"
-                  className="font-semibold cursor-pointer"
-                >
+                <label htmlFor="IMAGE" className="font-semibold cursor-pointer">
                   Images
                 </label>
               </div>
@@ -430,10 +418,7 @@ const Index = (props) => {
                   checked={radioValue === "VIDEO"}
                   onChange={(e) => setRadioValue(e?.target?.value)}
                 />
-                <label
-                  htmlFor="VIDEO"
-                  className="font-semibold cursor-pointer"
-                >
+                <label htmlFor="VIDEO" className="font-semibold cursor-pointer">
                   Videos
                 </label>
               </div>
