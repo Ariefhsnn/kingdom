@@ -319,6 +319,10 @@ export default function Index(props) {
     setSelectedUser(filteredSelectedUser);
   };
 
+  const openToast = () => {
+    toast.success("test!");
+  };
+
   return (
     <>
       <Navbar sidebar={sidebar} setSidebar={setSidebar} />
@@ -361,7 +365,7 @@ export default function Index(props) {
                 <Button
                   variant="outlineBlue"
                   className="flex justify-center"
-                  // onClick={() => openToast}
+                  onClick={openToast}
                 >
                   Export as .xlsx
                 </Button>

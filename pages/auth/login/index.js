@@ -5,6 +5,7 @@ import { BiLoaderAlt } from "react-icons/bi";
 import Button from "../../../components/button";
 import Head from "next/head";
 import axios from "axios";
+import { toast } from "react-toastify";
 import { useRouter } from "next/router";
 
 export default function Login() {
@@ -26,7 +27,7 @@ export default function Login() {
         isForm,
         config
       );
-      // toast.success("Login Succesfully!");
+      toast.success("Login Succesfully!");
 
       let { data, status } = res;
       if (status == 200) {
