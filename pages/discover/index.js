@@ -149,12 +149,13 @@ const Index = (props) => {
       const res = await axios.delete(`v1/discover/${isForm?.id}`);
       let { data, status } = res;
       if (status == 200 || status == 204) {
+        toastify(data?.message, "success");
         await getDiscover();
         await closeModalEdit();
       }
     } catch (error) {
-      let { data } = error?.response;
-      console.log(data);
+      let { data } = await error?.response;
+      toastify(data?.message, "error");
     }
   };
 
