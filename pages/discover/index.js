@@ -13,7 +13,6 @@ import TaskTab from "../../components/button/TaskTab";
 import axios from "axios";
 import { getCookie } from "../../utils/cookie";
 import items from "../../utils/json/tabs.json";
-import { toastify } from "../../utils/useFunction";
 
 const Index = (props) => {
   let { token, userId } = props;
