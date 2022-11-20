@@ -11,6 +11,7 @@ import Navbar from "../../components/navbar";
 import Table from "../../components/table";
 import TaskTab from "../../components/button/TaskTab";
 import UploaderBox from "../../components/button/UploaderBox";
+import { dateToString } from "../../utils/useFunction";
 import { getCookie } from "../../utils/cookie";
 import items from "../../utils/json/category.json";
 
@@ -83,6 +84,9 @@ const Index = (props) => {
       Header: "Creation date",
       Footer: "Creation date",
       accessor: "creationDate",
+      Cell: ({ value }) => {
+        return <span>{dateToString(value)}</span>;
+      },
     },
     {
       Header: "Delete",

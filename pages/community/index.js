@@ -1,5 +1,6 @@
 import { MdEdit, MdOutlineDelete } from "react-icons/md";
 import React, { useEffect, useMemo, useState } from "react";
+import { dateToString, toastify } from "../../utils/useFunction";
 
 import { AiOutlineEdit } from "react-icons/ai";
 import { BiLoaderAlt } from "react-icons/bi";
@@ -7,6 +8,7 @@ import Button from "../../components/button";
 import DefaultSelect from "../../components/select";
 import { GlobalFilter } from "../../components/table/components/GlobalFilter";
 import Group from "../../utils/json/groups.json";
+import Icon from "../../components/icon";
 import Layouts from "../../components/Layouts";
 import Modal from "../../components/modal/Modal";
 import Navbar from "../../components/navbar";
@@ -15,7 +17,6 @@ import TaskTab from "../../components/button/TaskTab";
 import UploaderBox from "../../components/button/UploaderBox";
 import axios from "axios";
 import { getCookie } from "../../utils/cookie";
-import { toast } from "react-toastify";
 
 export default function Index(props) {
   let { token } = props;
@@ -38,6 +39,7 @@ export default function Index(props) {
   const [isForm, setIsForm] = useState({});
   const [opt, setOpt] = useState([]);
   const [val, setVal] = useState([]);
+  const [meta, setMeta] = useState(null);
   const [disabledBtn, setDisabledBtn] = useState(false);
 
   const Menus = [
@@ -56,6 +58,7 @@ export default function Index(props) {
   const closeModalAdd = () => {
     setIsShowAdd(false);
     setFileSelected([]);
+    setSelectedUser([]);
     setVal([]);
   };
 
@@ -72,11 +75,9 @@ export default function Index(props) {
 
   const getUser = async () => {
     try {
-      await axios
-        .get("https://kingdom-api-dev.gbempower.asia/v1/user")
-        .then(function (response) {
-          setUserData(response?.data?.data);
-        });
+      await axios.get("v1/user").then(function (response) {
+        setUserData(response?.data?.data);
+      });
     } catch (error) {
       console.log(error);
     }
@@ -92,17 +93,23 @@ export default function Index(props) {
 
   const getGroup = async () => {
     try {
-      axios
-        .get("https://kingdom-api-dev.gbempower.asia/v1/group")
-        .then(function (response) {
-          console.log(response?.data?.data);
-          setDataTable(response?.data?.data);
-          setOldData(response?.data?.data);
-        });
+      axios.get("v1/group").then(function (response) {
+        console.log(response?.data?.data);
+        setDataTable(response?.data?.data);
+        setOldData(response?.data?.data);
+        setMeta(response?.data?.meta);
+        let totalPage = response?.data?.meta?.total / 5;
+        console.log(totalPage, "total");
+        setPageCount(parseInt(totalPage));
+      });
     } catch (error) {
       console.log(error);
     }
   };
+
+  useEffect(() => {
+    console.log("meta", meta);
+  }, [meta]);
 
   useEffect(() => {
     getGroup();
@@ -133,19 +140,13 @@ export default function Index(props) {
     }
   }, [isSearch, dataTable]);
 
-  const dateToString = (date) => {
-    return new Date(date).toDateString();
-  };
-
   const onDelete = async () => {
     await setLoading(true);
     try {
-      const res = await axios.delete(
-        `https://kingdom-api-dev.gbempower.asia/v1/group/${isForm?.id}`
-      );
+      const res = await axios.delete(`v1/group/${isForm?.id}`);
       let { data, status } = res;
       if (status == 204 || status == 200) {
-        await toast.success("Deleted successfully");
+        await toastify(data?.message, "success");
         await getGroup();
         await setLoading(false);
         await closeModalEdit();
@@ -153,8 +154,8 @@ export default function Index(props) {
         throw data;
       }
     } catch (error) {
-      let { data, status } = error?.response;
-      toast.error(data);
+      let { data, status } = await error?.response;
+      toastify(data?.message, "error");
     }
   };
 
@@ -167,19 +168,15 @@ export default function Index(props) {
     let items = new FormData();
     items.append("name", isForm?.name);
     items.append("description", isForm?.description);
-    items.append("photos", fileSelected[0], `${fileSelected[0]?.path}`);
+    items.append("photos", fileSelected[0], `${fileSelected[0]?.name}`);
     items.append("admins", JSON.stringify(userItems));
 
     try {
-      const res = await axios.post(
-        "https://kingdom-api-dev.gbempower.asia/v1/group",
-        items
-      );
+      const res = await axios.post("v1/group", items);
       let { data, status } = res;
-      console.log(res);
+      console.log(res, "res");
       if (status == 200 || status == 201) {
-        console.log(data);
-        await toast("Created successfully");
+        await toastify(data?.message, "success");
         await getGroup();
         await setLoading(false);
         await closeModalAdd();
@@ -195,20 +192,20 @@ export default function Index(props) {
     let items = new FormData();
     items.append("name", isForm?.name);
     items.append("description", isForm?.description);
-    if (fileSelected.length > 0)
+    if (fileSelected.length > 0) {
       items.append("new_photos", fileSelected[0], `${fileSelected[0].path}`);
+    }
     // console.log(fileSelected[0].path)
 
     try {
-      const res = await axios.put(
-        `https://kingdom-api-dev.gbempower.asia/v1/group/${isForm?.id}`,
-        items
-      );
+      const res = await axios.put(`v1/group/${isForm?.id}`, items);
       let { data, status } = res;
       console.log(res);
       if (status == 200 || status == 201) {
         console.log(data);
-        await toast("Updated successfully");
+        await toast.success("Updated successfully", {
+          icon: ({}) => <Icon type="success" />,
+        });
         await getGroup();
         await setLoading(false);
         await closeModalAdd();
@@ -320,7 +317,7 @@ export default function Index(props) {
   };
 
   const openToast = () => {
-    toast.success("test!");
+    toastify("test", "success");
   };
 
   return (
@@ -381,8 +378,8 @@ export default function Index(props) {
                 items={filteredItem}
                 setIsSelected={setIsSelected}
                 totalPages={pageCount}
-                total={total}
-                setPages={pageCount}
+                total={meta?.total}
+                setPages={meta?.page}
               />
             </div>
           ) : null}

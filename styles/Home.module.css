@@ -129,5 +129,6 @@
 }
 
 :root {
-  --toastify-icon-color-success: #324158;
+  --toastify-icon-color-success: #324158 !important;
+  --toastify-color-success: #324158;
 }

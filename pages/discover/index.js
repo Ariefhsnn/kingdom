@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { dateToString, toastify } from "../../utils/useFunction";
 
 import { AiOutlineEdit } from "react-icons/ai";
 import { BiLoaderAlt } from "react-icons/bi";
@@ -12,7 +13,6 @@ import TaskTab from "../../components/button/TaskTab";
 import axios from "axios";
 import { getCookie } from "../../utils/cookie";
 import items from "../../utils/json/tabs.json";
-import { toast } from "react-toastify";
 
 const Index = (props) => {
   let { token, userId } = props;
@@ -61,11 +61,9 @@ const Index = (props) => {
 
   const getDiscover = async () => {
     try {
-      axios
-        .get("https://kingdom-api-dev.gbempower.asia/v1/discover")
-        .then(function (response) {
-          setDataTable(response?.data?.data);
-        });
+      axios.get("v1/discover").then(function (response) {
+        setDataTable(response?.data?.data);
+      });
     } catch (error) {
       console.log(error);
     }
@@ -107,6 +105,9 @@ const Index = (props) => {
       Header: "Creation date",
       Footer: "Creation date",
       accessor: "created_at",
+      Cell: ({ value }) => {
+        return <span>{dateToString(value)}</span>;
+      },
     },
     // {
     //   Header: "Delete",
@@ -145,9 +146,7 @@ const Index = (props) => {
 
   const onDelete = async () => {
     try {
-      const res = await axios.delete(
-        `https://kingdom-api-dev.gbempower.asia/v1/discover/${isForm?.id}`
-      );
+      const res = await axios.delete(`v1/discover/${isForm?.id}`);
       let { data, status } = res;
       if (status == 200 || status == 204) {
         await getDiscover();
@@ -166,10 +165,7 @@ const Index = (props) => {
     items.append("content_type", radioValue.toUpperCase());
 
     try {
-      const res = await axios.post(
-        `https://kingdom-api-dev.gbempower.asia/v1/discover`,
-        items
-      );
+      const res = await axios.post(`v1/discover`, items);
       let { data, status } = res;
       console.log(res);
       if (status == 200 || status == 201) {
@@ -192,10 +188,7 @@ const Index = (props) => {
     items.append("content_type", radioValue.toUpperCase());
 
     try {
-      const res = await axios.put(
-        `https://kingdom-api-dev.gbempower.asia/v1/discover/${isForm?.id}`,
-        items
-      );
+      const res = await axios.put(`v1/discover/${isForm?.id}`, items);
       let { data, status } = res;
       if (status == 200 || status == 201) {
         await setLoading(false);

@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { dateToString, toastify } from "../../utils/useFunction";
 
+import { AiOutlineEdit } from "react-icons/ai";
 import Button from "../../components/button";
+import DefaultSelect from "../../components/select";
 import { GlobalFilter } from "../../components/table/components/GlobalFilter";
 import Layouts from "../../components/Layouts";
-import { MdEdit } from "react-icons/md";
 import Modal from "../../components/modal/Modal";
 import Navbar from "../../components/navbar";
 import Table from "../../components/table";
@@ -21,30 +23,28 @@ const Index = (props) => {
   const [isSelected, setIsSelected] = useState("");
   const [tab, setTab] = useState("Tab");
   const [isSearch, setIsSearch] = useState("");
-  const [isShowAdd, setIsShowAdd] = useState(false);
-  const [fileSelected, setFileSelected] = useState([]);
-  const [opt, setOpt] = useState([]);
-  const [val, setVal] = useState([]);
 
-  const Menus = [
-    {
-      name: "Tab",
-    },
-  ];
+  const [val, setVal] = useState(null);
+  const [isShow, setIsShow] = useState(false);
+  const [isForm, setIsForm] = useState(null);
 
-  const openModalAdd = () => {
-    setIsShowAdd(true);
+  // =====> MODAL CONFIG <=====
+  const openModalEdit = (items) => {
+    console.log(items, "data");
+    setIsForm(items);
+    setIsShow(true);
   };
 
-  const closeModalAdd = () => {
-    setIsShowAdd(false);
-    setFileSelected([]);
-    setVal([]);
+  const closeModalEdit = () => {
+    setIsShow(false);
+    setVal(null);
+    setIsForm(null);
   };
 
+  // =====> API'S CONSUMING <=====
   const getUser = async () => {
     try {
-      axios.get("https://kingdom-api-dev.gbempower.asia/v1/user").then(function (response) {
+      axios.get("v1/user").then(function (response) {
         setDataTable(response?.data?.data);
         setOldData(response?.data?.data);
         setTotal(response?.data?.data?.length);
@@ -54,10 +54,48 @@ const Index = (props) => {
     }
   };
 
+  const onUpdate = async () => {
+    await setLoading(true);
+    let items = { id: isForm?.id, member_type: val?.value };
+    try {
+      const res = await axios.put(`v1/user/member-type/update`, items);
+      let { data, status } = res;
+      if (status == 200 || status == 201) {
+        await toastify(data?.message, "success");
+        await getUser();
+        await setLoading(false);
+      } else {
+        throw data;
+      }
+    } catch (error) {
+      let { data, status } = await error?.response;
+      toastify(data?.message, "error");
+    }
+  };
+
+  const onDelete = async () => {
+    await setLoading(true);
+    try {
+      const res = await axios.delete(`v1/user/${isForm?.id}`);
+      let { data, status } = res;
+      if (status == 204 || status == 200) {
+        await toastify(data?.message, "success");
+        await getUser();
+        await setLoading(false);
+      } else {
+        throw data;
+      }
+    } catch (error) {
+      let { data, status } = await error?.response;
+      toastify(data?.message, "error");
+    }
+  };
+
   useEffect(() => {
     getUser();
   }, []);
 
+  // =====> FILTERING <=====
   const filteredItem = useMemo(() => {
     setDataTable(oldData);
     if (isSearch?.length >= 3) {
@@ -70,10 +108,12 @@ const Index = (props) => {
     }
   }, [isSearch, dataTable]);
 
-  const dateToString = (date) => {
-    return new Date(date).toDateString();
-  };
+  const options = [
+    { id: 1, value: "STANDARD", label: "Standard" },
+    { id: 2, value: "BUSINESS", label: "Business" },
+  ];
 
+  // =====> TABLE <=====
   const Columns = [
     {
       Header: "User name",
@@ -93,39 +133,31 @@ const Index = (props) => {
         return <span> {dateToString(value)} </span>;
       },
     },
+    // {
+    //   Header: "Delete",
+    //   Footer: "Delete",
+    //   accessor: "",
+    //   Cell: ({ row }) => {
+    //     return (
+    //       <Button variant="danger" onClick={() => onDelete(row?.original?.id)}>
+    //         Delete
+    //       </Button>
+    //     );
+    //   },
+    // },
     {
-      Header: "Delete",
-      Footer: "Delete",
-      accessor: "Delete",
-    },
-    {
-      Header: "Member type",
-      Footer: "Member type",
-      accessor: "role",
-      Cell: ({ value }) => {
-        return <span> {value} </span>;
+      Header: "Action",
+      Footer: "Action",
+      accessor: "",
+      Cell: ({ row }) => {
+        return (
+          <button onClick={() => openModalEdit(row?.original)}>
+            <AiOutlineEdit className="h-8 w-8 text-sky-400" />
+          </button>
+        );
       },
-      // Cell: ({ row, value }) => {
-      //   return (
-      //     <button onClick={() => onEdit(row?.original)}>
-      //       <AiOutlineEdit className="h-8 w-8 text-sky-400" />
-      //     </button>
-      //   );1
-      // },
     },
   ];
-
-  useEffect(() => {
-    console.log(12, fileSelected);
-  }, [fileSelected]);
-
-  const onSelectUser = (e) => {
-    setVal([{ ...val, name: e?.groupName, id: e?.id }]);
-  };
-
-  useEffect(() => {
-    console.log(val);
-  }, [val]);
 
   return (
     <>
@@ -175,93 +207,38 @@ const Index = (props) => {
           ) : null}
         </main>
       </Layouts>
+
       <Modal
-        isOpen={isShowAdd}
-        closeModal={closeModalAdd}
-        title="Create Tab"
+        isOpen={isShow}
+        closeModal={closeModalEdit}
+        title="Edit User's Role"
         sizes="small"
       >
         <div className="px-10 pb-10 text-gray-700">
           <div className="w-full flex flex-col mb-5">
-            <label htmlFor="tabName" className="font-bold text-base">
-              Tab name
-            </label>
-            <input
-              type="text"
-              className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 py-2 duration-500 text-gray-500"
+            <label htmlFor="role"> User Role </label>
+            <DefaultSelect
+              value={val}
+              onChange={(e) => setVal(e)}
+              isMulti={false}
+              options={options}
             />
           </div>
-
-          <div className="w-full mb-5 flex flex-col gap-3">
-            <label htmlFor="contentType" className="font-bold text-base ">
-              {" "}
-              Content Type{" "}
-            </label>
-            <div className="flex flex-col gap-2">
-              <div className="flex gap-2 items-center">
-                <input
-                  type="radio"
-                  value="Images"
-                  id="Images"
-                  name="contentType"
-                  className="text-gray-500 w-4 h-4"
-                />
-                <label
-                  htmlFor="Images"
-                  className="font-semibold cursor-pointer"
-                >
-                  {" "}
-                  Images{" "}
-                </label>
-              </div>
-              <div className="flex gap-2 items-center">
-                <input
-                  type="radio"
-                  value="Videos"
-                  id="Videos"
-                  name="contentType"
-                  className="text-gray-500 w-4 h-4 "
-                />
-                <label
-                  htmlFor="Videos"
-                  className="font-semibold cursor-pointer"
-                >
-                  {" "}
-                  Videos{" "}
-                </label>
-              </div>
-              <div className="flex gap-2 items-center">
-                <input
-                  type="radio"
-                  value="Articles"
-                  id="Articles"
-                  name="contentType"
-                  className="text-gray-500 w-4 h-4"
-                />
-                <label
-                  htmlFor="Articles"
-                  className="font-semibold cursor-pointer"
-                >
-                  {" "}
-                  Articles{" "}
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <div className="w-2/3 mx-auto flex flex-row gap-3">
+          <div className="w-full mx-auto flex flex-row gap-3">
             <Button
-              variant="outline"
+              variant="danger"
               className="w-1/2 flex justify-center items-center"
-              onClick={closeModalAdd}
+              onClick={onDelete}
             >
-              <span className="text-base capitalize w-full"> Cancel </span>
+              <span className="text-base capitalize w-full"> Delete User </span>
             </Button>
             <Button
               variant="primary"
               className="w-1/2 flex justify-center items-center"
+              onClick={onUpdate}
+              disabled={val != null ? false : true}
             >
-              <span className="text-base capitalize w-full "> Create </span>
+              <span className="text-base capitalize w-full "> Save </span>
             </Button>
           </div>
         </div>

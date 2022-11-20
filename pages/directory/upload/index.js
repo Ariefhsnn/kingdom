@@ -106,12 +106,10 @@ const Index = (props) => {
 
   const getDirectory = async () => {
     try {
-      axios
-        .get("https://kingdom-api-dev.gbempower.asia/v1/directory")
-        .then(function (response) {
-          setDataTable(response?.data?.data);
-          // setOldData(response?.data?.data);
-        });
+      axios.get("v1/directory").then(function (response) {
+        setDataTable(response?.data?.data);
+        // setOldData(response?.data?.data);
+      });
     } catch (error) {
       console.log(error);
     }
@@ -193,10 +191,7 @@ const Index = (props) => {
     items.append("opening_hours", date);
 
     try {
-      let res = axios.post(
-        `https://kingdom-api-dev.gbempower.asia/v1/directory`,
-        items
-      );
+      let res = axios.post(`v1/directory`, items);
       let { data, status } = res;
       if (status == 200 || status == 201) {
         await closeModalAdd();

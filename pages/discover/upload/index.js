@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { dateToString, toastify } from "../../../utils/useFunction";
 
 import { AiOutlineEdit } from "react-icons/ai";
 import { BiLoaderAlt } from "react-icons/bi";
@@ -15,7 +16,6 @@ import UploaderBox from "../../../components/button/UploaderBox";
 import axios from "axios";
 import { getCookie } from "../../../utils/cookie";
 import items from "../../../utils/json/discoverUploads.json";
-import { toast } from "react-toastify";
 
 export default function Index(props) {
   let { token, userId } = props;
@@ -76,10 +76,6 @@ export default function Index(props) {
     setIsForm({});
     setRadioValue("");
     setFileSelected([]);
-  };
-
-  const dateToString = (date) => {
-    return new Date(date).toDateString();
   };
 
   const getDiscover = async () => {

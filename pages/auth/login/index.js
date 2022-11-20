@@ -5,7 +5,7 @@ import { BiLoaderAlt } from "react-icons/bi";
 import Button from "../../../components/button";
 import Head from "next/head";
 import axios from "axios";
-import { toast } from "react-toastify";
+import { toastify } from "../../../utils/useFunction";
 import { useRouter } from "next/router";
 
 export default function Login() {
@@ -22,22 +22,19 @@ export default function Login() {
   const onLogin = async () => {
     await setLoading(true);
     try {
-      const res = await axios.post(
-        "https://kingdom-api-dev.gbempower.asia/v1/auth/login",
-        isForm,
-        config
-      );
-      toast.success("Login Succesfully!");
+      const res = await axios.post("v1/auth/login", isForm, config);
 
       let { data, status } = res;
+
       if (status == 200) {
+        toastify(data?.message, "success");
         await setCookie("token", data?.data?.token);
         await setCookie("userId", data?.data?.id);
         await router.push("/community");
       }
     } catch (error) {
-      let { status, data } = error?.response;
-      console.log(data?.message);
+      let { status, data } = await error?.response;
+      toastify(data?.message, "error");
     } finally {
       await setLoading(false);
     }

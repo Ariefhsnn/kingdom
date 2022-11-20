@@ -9,6 +9,10 @@ const routes = [
         path: "/community",
         name: "Group",
         icon: "",
+        query: {
+          page: 1,
+          limit: 10,
+        },
       },
     ],
   },
@@ -22,12 +26,20 @@ const routes = [
         path: "/discover",
         name: "Create",
         icon: "",
+        query: {
+          page: 1,
+          limit: 10,
+        },
       },
       {
         url: "/discover/upload",
         path: "/discover/upload",
         name: "Upload",
         icon: "",
+        query: {
+          page: 1,
+          limit: 10,
+        },
       },
     ],
   },
@@ -41,12 +53,20 @@ const routes = [
         path: "/directory",
         name: "Create",
         icon: "",
+        query: {
+          page: 1,
+          limit: 10,
+        },
       },
       {
         url: "/directory/upload",
         path: "/directory/upload",
         name: "Upload",
         icon: "",
+        query: {
+          page: 1,
+          limit: 10,
+        },
       },
     ],
   },
@@ -55,6 +75,10 @@ const routes = [
     name: "User Management",
     icon: "MdPerson",
     path: "/user",
+    query: {
+      page: 1,
+      limit: 10,
+    },
   },
 ];
 
