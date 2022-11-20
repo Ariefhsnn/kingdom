@@ -13,6 +13,7 @@ import TaskTab from "../../components/button/TaskTab";
 import axios from "axios";
 import { getCookie } from "../../utils/cookie";
 import items from "../../utils/json/tabs.json";
+import { toastify } from "../../utils/useFunction";
 
 const Index = (props) => {
   let { token, userId } = props;
@@ -170,14 +171,14 @@ const Index = (props) => {
       console.log(res);
       if (status == 200 || status == 201) {
         console.log(data);
-        // await toast("Created successfully");
+        toastify(data?.message, "success");
         await getDiscover();
         await setLoading(false);
         await closeModalAdd();
       }
     } catch (error) {
-      let { data } = error?.response;
-      console.log(data);
+      let { data } = await error?.response;
+      toastify(data?.message, "error");
     }
   };
 
@@ -191,13 +192,14 @@ const Index = (props) => {
       const res = await axios.put(`v1/discover/${isForm?.id}`, items);
       let { data, status } = res;
       if (status == 200 || status == 201) {
+        toastify(data?.message, "success");
         await setLoading(false);
         await getDiscover();
         await closeModalEdit();
       }
     } catch (error) {
-      let { data } = error?.response;
-      console.log(data);
+      let { data } = await error?.response;
+      toastify(data?.message, "error");
     }
   };
 

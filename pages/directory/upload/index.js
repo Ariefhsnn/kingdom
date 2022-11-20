@@ -13,6 +13,7 @@ import TaskTab from "../../../components/button/TaskTab";
 import UploaderBox from "../../../components/button/UploaderBox";
 import axios from "axios";
 import { getCookie } from "../../../utils/cookie";
+import { toastify } from "../../../utils/useFunction";
 
 // import items from "../../../utils/json/directoryUpload.json";
 
@@ -194,11 +195,13 @@ const Index = (props) => {
       let res = axios.post(`v1/directory`, items);
       let { data, status } = res;
       if (status == 200 || status == 201) {
+        toastify(data?.message, "success");
+        await getDirectory();
         await closeModalAdd();
       }
     } catch (error) {
-      let { data } = error?.response;
-      console.log(data);
+      let { data } = await error?.response;
+      toastify(data?.message, "error");
     }
   };
 
