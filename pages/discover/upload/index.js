@@ -39,6 +39,9 @@ export default function Index(props) {
   const [isForm, setIsForm] = useState({});
   const [discoverType, setDiscoverType] = useState(null);
   const [menus, setMenus] = useState(null);
+  const [contentType, setContentType] = useState(null);
+  const [oldData, setOldData] = useState([]);
+  const [initialType, setInitialType] = useState(null);
   const config = {
     headers: {
       "Content-Type": "multipart/form-data",
@@ -73,9 +76,15 @@ export default function Index(props) {
   const getDiscover = async () => {
     setLoading(true);
     try {
-      axios.get("v1/discover").then(function (response) {
-        setDiscoverType(response?.data?.data);
-      });
+      axios
+        .get("v1/discover")
+        .then(function (response) {
+          setDiscoverType(response?.data?.data);
+        })
+        .catch((err) => {
+          toastify(err?.response?.data?.message, "error");
+          setDataTable([]);
+        });
     } catch (error) {
       console.log(error);
     }
@@ -99,6 +108,8 @@ export default function Index(props) {
         )
         .then(function (response) {
           setDataTable(response?.data?.data);
+          setOldData(response?.data?.data);
+          setInitialType(response?.data?.data[0]?.discover?.content_type);
         })
         .catch((err) => {
           toastify(err?.response?.data?.message, "error");
@@ -111,12 +122,13 @@ export default function Index(props) {
     }
   };
 
-  useEffect(() => {
-    getDiscover();
-    getDiscoverContent();
-  }, []);
+  // useEffect(() => {
+  //   getDiscover();
+  //   getDiscoverContent();
+  // }, []);
 
   useEffect(() => {
+    getDiscover();
     getDiscoverContent();
   }, [tab]);
 
@@ -124,17 +136,30 @@ export default function Index(props) {
     let MenuData = [];
     if (discoverType) {
       discoverType.forEach((element) => {
-        MenuData.push({ name: element?.name });
+        MenuData.push({
+          name: element?.content_type,
+          id: element?.id,
+          type: element.content_type,
+        });
+        console.log("discover", element?.content_type);
       });
     }
     setMenus(MenuData);
   }, [discoverType]);
 
   useEffect(() => {
-    if (menus?.length > 0) {
-      setTab(menus[0]?.name);
+    if (initialType) {
+      setTab(initialType);
     }
-  }, [menus]);
+    console.log(initialType, "init");
+  }, [initialType]);
+
+  useEffect(() => {
+    if (radioValue) {
+      let filterData = menus.filter((e) => e?.id == radioValue);
+      setContentType(filterData);
+    }
+  }, [radioValue]);
 
   // useEffect(() => {
   //   if (imgData?.length > 0) imgData.forEach((e) => (e["type"] = "image"));
@@ -173,8 +198,6 @@ export default function Index(props) {
   //       : setTotal(newsData.length);
   //   }
   // }, [tab, imgData, boData, newsData, videoData]);
-
-  console.log("tabs", tab);
 
   const Columns = [
     {
@@ -306,13 +329,13 @@ export default function Index(props) {
   const onUpload = async () => {
     await setLoading(true);
     let items = new FormData();
-    if (radioValue == "image") {
+    if (contentType[0]?.type == "IMAGE") {
       items.append("photos", fileSelected[0], `${fileSelected[0].path}`);
-    } else if (radioValue == "video") {
+    } else if (contentType[0]?.type == "VIDEO") {
       items.append("video_link", isForm?.link);
     }
     items.append("title", isForm?.title);
-    items.append("discover_id", "1");
+    items.append("discover_id", Number(radioValue));
     items.append("description", "desc");
 
     try {
@@ -332,14 +355,44 @@ export default function Index(props) {
     }
   };
 
-  useEffect(() => {
-    if (menus) {
-      console.log(
-        "find",
-        menus.some((e) => e?.name == "Video")
+  const onDelete = async () => {
+    await setLoading(true);
+    try {
+      const res = await axios.delete(
+        `v1/discover-content/${isForm?.id}`,
+        config
       );
+      let { data, status } = res;
+      if (status == 204 || status == 200) {
+        await toastify(data?.message, "success");
+        await getDiscover();
+        await getDiscoverContent();
+        await setLoading(false);
+        await closeModalEdit();
+      } else {
+        throw data;
+      }
+    } catch (error) {
+      // let { data, status } = await error?.response;
+      // toastify(data?.message, "error");
     }
-  }, [menus]);
+  };
+
+  const filteredItem = useMemo(() => {
+    if (dataTable?.length > 0) {
+      setDataTable(oldData);
+      if (isSearch?.length >= 3) {
+        return dataTable.filter(
+          (e) => e?.title.toLowerCase().indexOf(isSearch.toLowerCase()) !== -1
+        );
+      } else {
+        setDataTable(oldData);
+        return dataTable;
+      }
+    } else {
+      return [];
+    }
+  }, [isSearch, dataTable]);
 
   return (
     <>
@@ -386,7 +439,7 @@ export default function Index(props) {
                 loading={loading}
                 setLoading={setLoading}
                 Columns={Columns}
-                items={dataTable}
+                items={filteredItem}
                 // setIsSelected={setIsSelected}
                 // totalPages={pageCount}
                 // total={total}
@@ -399,7 +452,7 @@ export default function Index(props) {
                 loading={loading}
                 setLoading={setLoading}
                 Columns={Columns}
-                items={dataTable}
+                items={filteredItem}
                 setIsSelected={setIsSelected}
                 totalPages={pageCount}
                 total={total}
@@ -412,7 +465,7 @@ export default function Index(props) {
                 loading={loading}
                 setLoading={setLoading}
                 Columns={Columns}
-                items={dataTable}
+                items={filteredItem}
                 setIsSelected={setIsSelected}
                 totalPages={pageCount}
                 total={total}
@@ -425,7 +478,7 @@ export default function Index(props) {
                 loading={loading}
                 setLoading={setLoading}
                 Columns={Columns}
-                items={dataTable}
+                items={filteredItem}
                 setIsSelected={setIsSelected}
                 totalPages={pageCount}
                 total={total}
@@ -464,61 +517,62 @@ export default function Index(props) {
             <div className="flex flex-col gap-2">
               {menus && menus.length > 0 ? (
                 <>
-                  {menus.some((e) => e?.name == "Image") ? (
-                    <div className="flex gap-2 items-center">
-                      <input
-                        type="radio"
-                        value="image"
-                        id="image"
-                        name="contentType"
-                        className="text-gray-500 w-4 h-4"
-                        checked={radioValue === "image"}
-                        onChange={(e) => setRadioValue(e?.target?.value)}
-                      />
-                      <label
-                        htmlFor="image"
-                        className="font-semibold cursor-pointer"
-                      >
-                        Image
-                      </label>
-                    </div>
-                  ) : (
-                    menus.some((e) =>
-                      e?.name == "Video" ? (
-                        <div className="flex gap-2 items-center">
-                          <input
-                            type="radio"
-                            value="video"
-                            id="video"
-                            name="contentType"
-                            className="text-gray-500 w-4 h-4 "
-                            checked={radioValue === "video"}
-                            onChange={(e) => setRadioValue(e?.target?.value)}
-                          />
-                          <label
-                            htmlFor="video"
-                            className="font-semibold cursor-pointer"
-                          >
-                            Video
-                          </label>
-                        </div>
-                      ) : null
-                    )
-                  )}
+                  {menus.map((e) => (
+                    <React.Fragment key={e?.id}>
+                      <div className="flex gap-2 items-center" key={e?.id}>
+                        <input
+                          type="radio"
+                          value={e?.id}
+                          key={e?.id}
+                          id={e?.id}
+                          name="contentType"
+                          className="text-gray-500 w-4 h-4"
+                          checked={radioValue == e?.id}
+                          onChange={(e) => setRadioValue(e?.target?.value)}
+                        />
+                        <label
+                          htmlFor={e?.id}
+                          className="font-semibold cursor-pointer"
+                        >
+                          {e?.name}
+                        </label>
+                      </div>
+                      {/* <div className="flex gap-2 items-center">
+                        <input
+                          type="radio"
+                          value="video"
+                          id="video"
+                          name="contentType"
+                          className="text-gray-500 w-4 h-4 "
+                          checked={radioValue === "video"}
+                          onChange={(e) => setRadioValue(e?.target?.value)}
+                        />
+                        <label
+                          htmlFor="video"
+                          className="font-semibold cursor-pointer"
+                        >
+                          Video
+                        </label>
+                      </div> */}
+                    </React.Fragment>
+                  ))}
                 </>
               ) : null}
             </div>
           </div>
 
-          <div className="w-full">
-            {radioValue == "image"
-              ? imageForm(false)
-              : radioValue == "video"
-              ? videoForm()
-              : radioValue == "business" || radioValue == "news"
-              ? otherForm(false)
-              : null}
-          </div>
+          {contentType && (
+            <div className="w-full">
+              {contentType[0]?.type == "IMAGE"
+                ? imageForm(false)
+                : contentType[0]?.type == "VIDEO"
+                ? videoForm()
+                : contentType[0]?.type == "BUSSINES" ||
+                  contentType[0]?.type == "NEWS"
+                ? otherForm(false)
+                : null}
+            </div>
+          )}
 
           <div className="w-2/3 mx-auto flex flex-row gap-3">
             <Button
@@ -662,11 +716,9 @@ export default function Index(props) {
             <Button
               variant="danger"
               className="w-1/2 flex justify-center items-center"
-              onClick={closeModalEdit}
+              onClick={onDelete}
             >
-              <span className="text-base capitalize w-full">
-                Delete content
-              </span>
+              <span className="text-base capitalize w-full">Delete</span>
             </Button>
             <Button
               variant="primary"

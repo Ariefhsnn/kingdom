@@ -61,9 +61,15 @@ const Index = (props) => {
 
   const getDiscover = async () => {
     try {
-      axios.get("v1/discover").then(function (response) {
-        setDataTable(response?.data?.data);
-      });
+      axios
+        .get("v1/discover")
+        .then(function (response) {
+          setDataTable(response?.data?.data);
+        })
+        .catch((err) => {
+          toastify(err?.response?.data?.message, "error");
+          setDataTable([]);
+        });
     } catch (error) {
       console.log(error);
     }

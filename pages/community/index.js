@@ -150,9 +150,10 @@ export default function Index(props) {
   const filteredItem = useMemo(() => {
     setDataTable(oldData);
     if (isSearch?.length >= 3) {
-      return dataTable.filter(
+      let filters = dataTable.filter(
         (e) => e?.name.toLowerCase().indexOf(isSearch.toLowerCase()) !== -1
       );
+      setDataTable(filters);
     } else {
       setDataTable(oldData);
       return dataTable;
@@ -392,7 +393,7 @@ export default function Index(props) {
                 loading={loading}
                 setLoading={setLoading}
                 Columns={Columns}
-                items={filteredItem}
+                items={dataTable}
                 setIsSelected={setIsSelected}
                 totalPages={pageCount}
                 total={meta?.total}
@@ -405,7 +406,7 @@ export default function Index(props) {
                 loading={loading}
                 setLoading={setLoading}
                 Columns={Columns}
-                items={filteredItem}
+                items={dataTable}
                 setIsSelected={setIsSelected}
                 totalPages={pageCount}
                 total={meta?.total}
