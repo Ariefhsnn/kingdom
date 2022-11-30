@@ -25,7 +25,7 @@ const TaskTab = ({ value, setValue, options, children }) => {
             <button
               key={idx}
               onClick={(e) => handleTabs(opt?.name)}
-              className={`mx-2 flex items-center
+              className={`mx-2 flex items-center capitalize
                                     ${
                                       value == opt?.name
                                         ? "border-purple-500 text-primary-500 font-bold mb-3 md:mb-0"

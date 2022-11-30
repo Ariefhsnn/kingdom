@@ -14,6 +14,7 @@
     "@babel/preset-react": "^7.18.6",
     "@headlessui/react": "^1.7.2",
     "@heroicons/react": "v1",
+    "@nestjsx/crud-request": "^5.0.0-alpha.3",
     "@tailwindcss/line-clamp": "^0.4.2",
     "autoprefixer": "^10.4.11",
     "axios": "^1.1.2",

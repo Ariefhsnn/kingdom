@@ -17,5 +17,8 @@ export const toastify = (msg, type) => {
 };
 
 export const dateToString = (date) => {
-  return new Date(date).toDateString();
+  let year = new Date(date).getFullYear();
+  let month = new Date(date).getMonth();
+  let day = new Date(date).getDay();
+  return `${day} - ${month} - ${year}`;
 };

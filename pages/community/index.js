@@ -42,6 +42,13 @@ export default function Index(props) {
   const [meta, setMeta] = useState(null);
   const [disabledBtn, setDisabledBtn] = useState(false);
 
+  const config = {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  };
+
   const Menus = [
     {
       name: "Active",
@@ -75,7 +82,7 @@ export default function Index(props) {
 
   const getUser = async () => {
     try {
-      await axios.get("v1/user").then(function (response) {
+      await axios.get("v1/user", config).then(function (response) {
         setUserData(response?.data?.data);
       });
     } catch (error) {
@@ -92,8 +99,16 @@ export default function Index(props) {
   }, [isForm, fileSelected]);
 
   const getGroup = async () => {
+    if (tab) {
+      config = {
+        ...config,
+        params: {
+          is_active: tab == "Active" ? 1 : 0,
+        },
+      };
+    }
     try {
-      axios.get("v1/group").then(function (response) {
+      axios.get("v1/group", config).then(function (response) {
         console.log(response?.data?.data);
         setDataTable(response?.data?.data);
         setOldData(response?.data?.data);
@@ -115,6 +130,10 @@ export default function Index(props) {
     getGroup();
     getUser();
   }, []);
+
+  useEffect(() => {
+    getGroup();
+  }, [tab]);
 
   useEffect(() => {
     console.log(1, isForm);
@@ -143,7 +162,7 @@ export default function Index(props) {
   const onDelete = async () => {
     await setLoading(true);
     try {
-      const res = await axios.delete(`v1/group/${isForm?.id}`);
+      const res = await axios.delete(`v1/group/${isForm?.id}`, config);
       let { data, status } = res;
       if (status == 204 || status == 200) {
         await toastify(data?.message, "success");
@@ -172,7 +191,7 @@ export default function Index(props) {
     items.append("admins", JSON.stringify(userItems));
 
     try {
-      const res = await axios.post("v1/group", items);
+      const res = await axios.post("v1/group", items, config);
       let { data, status } = res;
       console.log(res, "res");
       if (status == 200 || status == 201) {
@@ -198,21 +217,19 @@ export default function Index(props) {
     // console.log(fileSelected[0].path)
 
     try {
-      const res = await axios.put(`v1/group/${isForm?.id}`, items);
+      const res = await axios.put(`v1/group/${isForm?.id}`, items, config);
       let { data, status } = res;
-      console.log(res);
+      console.log("data", res);
       if (status == 200 || status == 201) {
         console.log(data);
-        await toast.success("Updated successfully", {
-          icon: ({}) => <Icon type="success" />,
-        });
+        await toastify(data?.message, "success");
         await getGroup();
         await setLoading(false);
-        await closeModalAdd();
+        await closeModalEdit();
       }
     } catch (error) {
-      let { data } = error?.response;
-      console.log(data);
+      // let { data } = error?.response;
+      // console.log(data);
     }
   };
 
@@ -382,7 +399,20 @@ export default function Index(props) {
                 setPages={meta?.page}
               />
             </div>
-          ) : null}
+          ) : (
+            <div className="w-full">
+              <Table
+                loading={loading}
+                setLoading={setLoading}
+                Columns={Columns}
+                items={filteredItem}
+                setIsSelected={setIsSelected}
+                totalPages={pageCount}
+                total={meta?.total}
+                setPages={meta?.page}
+              />
+            </div>
+          )}
         </main>
       </Layouts>
 
@@ -606,7 +636,7 @@ export default function Index(props) {
             >
               <span className="text-base capitalize w-full">
                 {" "}
-                Delete Gorup{" "}
+                Delete Group{" "}
               </span>
             </Button>
             <Button

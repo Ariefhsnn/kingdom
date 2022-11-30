@@ -27,6 +27,12 @@ const Index = (props) => {
   const [val, setVal] = useState(null);
   const [isShow, setIsShow] = useState(false);
   const [isForm, setIsForm] = useState(null);
+  const config = {
+    headers: {
+      "Content-Type": "multipart/form-data",
+      Authorization: `Bearer ${token}`,
+    },
+  };
 
   // =====> MODAL CONFIG <=====
   const openModalEdit = (items) => {
@@ -44,7 +50,7 @@ const Index = (props) => {
   // =====> API'S CONSUMING <=====
   const getUser = async () => {
     try {
-      axios.get("v1/user").then(function (response) {
+      axios.get("v1/user", config).then(function (response) {
         setDataTable(response?.data?.data);
         setOldData(response?.data?.data);
         setTotal(response?.data?.data?.length);
@@ -58,7 +64,7 @@ const Index = (props) => {
     await setLoading(true);
     let items = { id: isForm?.id, member_type: val?.value };
     try {
-      const res = await axios.put(`v1/user/member-type/update`, items);
+      const res = await axios.put(`v1/user/member-type/update`, items, config);
       let { data, status } = res;
       if (status == 200 || status == 201) {
         await toastify(data?.message, "success");
@@ -76,7 +82,7 @@ const Index = (props) => {
   const onDelete = async () => {
     await setLoading(true);
     try {
-      const res = await axios.delete(`v1/user/${isForm?.id}`);
+      const res = await axios.delete(`v1/user/${isForm?.id}`, config);
       let { data, status } = res;
       if (status == 204 || status == 200) {
         await toastify(data?.message, "success");

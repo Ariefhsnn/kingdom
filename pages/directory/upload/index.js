@@ -25,7 +25,7 @@ const Index = (props) => {
   const [pageCount, setPageCount] = useState(1);
   const [total, setTotal] = useState(0);
   const [isSelected, setIsSelected] = useState("");
-  const [tab, setTab] = useState("Churches");
+  const [tab, setTab] = useState("church");
   const [isSearch, setIsSearch] = useState("");
   const [isShowAdd, setIsShowAdd] = useState(false);
   const [fileSelected, setFileSelected] = useState([]);
@@ -38,15 +38,22 @@ const Index = (props) => {
   const [radioValue, setRadioValue] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
 
+  const config = {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  };
+
   const Menus = [
     {
-      name: "Churches",
+      name: "church",
     },
     {
-      name: "Associates",
+      name: "associate",
     },
     {
-      name: "Chambers",
+      name: "chamber",
     },
   ];
 
@@ -106,19 +113,37 @@ const Index = (props) => {
   }, [dataTable, tab]);
 
   const getDirectory = async () => {
+    if (tab) {
+      config = {
+        ...config,
+        params: {
+          category: tab,
+        },
+      };
+    }
     try {
-      axios.get("v1/directory").then(function (response) {
-        setDataTable(response?.data?.data);
-        // setOldData(response?.data?.data);
-      });
+      axios
+        .get("v1/directory", config)
+        .then(function (response) {
+          setDataTable(response?.data?.data);
+          // setOldData(response?.data?.data);
+        })
+        .catch((err) => {
+          toastify(err?.response?.data?.message, "error");
+          setDataTable([]);
+        });
     } catch (error) {
       console.log(error);
     }
   };
 
+  // useEffect(() => {
+  //   getDirectory();
+  // }, []);
+
   useEffect(() => {
     getDirectory();
-  }, []);
+  }, [tab]);
 
   const Columns = [
     {
@@ -144,11 +169,11 @@ const Index = (props) => {
       Footer: "Phone",
       accessor: "phone",
     },
-    {
-      Header: "Delete",
-      Footer: "Delete",
-      accessor: "delete",
-    },
+    // {
+    //   Header: "Delete",
+    //   Footer: "Delete",
+    //   accessor: "delete",
+    // },
     {
       Header: "Action",
       Footer: "Action",
@@ -192,7 +217,7 @@ const Index = (props) => {
     items.append("opening_hours", date);
 
     try {
-      let res = axios.post(`v1/directory`, items);
+      let res = await axios.post(`v1/directory`, items);
       let { data, status } = res;
       if (status == 200 || status == 201) {
         toastify(data?.message, "success");
@@ -201,6 +226,52 @@ const Index = (props) => {
       }
     } catch (error) {
       let { data } = await error?.response;
+      toastify(data?.message, "error");
+    }
+  };
+
+  const onUpdate = async () => {
+    let date = new Date(selectedTime).getTime();
+    let items = new FormData();
+    items.append("name", isForm?.name);
+    items.append("category", radioValue);
+    items.append("description", isForm?.description);
+    items.append("location", isForm?.location);
+    items.append("website_url", isForm?.website_url);
+    items.append("phone", isForm?.phone);
+    items.append("email", isForm?.email);
+    items.append("opening_hours", date);
+
+    try {
+      let res = await axios.put(`v1/directory/${isForm?.id}`, items, config);
+      let { data, status } = res;
+      console.log(status);
+      if (status == 200 || status == 201) {
+        await toastify(data?.message, "success");
+        await getDirectory();
+        await closeModalEdit();
+      }
+    } catch (error) {
+      let { data } = await error?.response;
+      toastify(data?.message, "error");
+    }
+  };
+
+  const onDelete = async () => {
+    await setLoading(true);
+    try {
+      const res = await axios.delete(`v1/directory/${isForm?.id}`, config);
+      let { data, status } = res;
+      if (status == 204 || status == 200) {
+        await toastify(data?.message, "success");
+        await getDirectory();
+        await setLoading(false);
+        await closeModalEdit();
+      } else {
+        throw data;
+      }
+    } catch (error) {
+      let { data, status } = await error?.response;
       toastify(data?.message, "error");
     }
   };
@@ -256,7 +327,7 @@ const Index = (props) => {
                 loading={loading}
                 setLoading={setLoading}
                 Columns={Columns}
-                items={churchesData}
+                items={dataTable}
                 setIsSelected={setIsSelected}
                 totalPages={pageCount}
                 total={total}
@@ -269,7 +340,7 @@ const Index = (props) => {
                 loading={loading}
                 setLoading={setLoading}
                 Columns={Columns}
-                items={associatesData}
+                items={dataTable}
                 setIsSelected={setIsSelected}
                 totalPages={pageCount}
                 total={total}
@@ -282,7 +353,7 @@ const Index = (props) => {
                 loading={loading}
                 setLoading={setLoading}
                 Columns={Columns}
-                items={chambersData}
+                items={dataTable}
                 setIsSelected={setIsSelected}
                 totalPages={pageCount}
                 total={total}
@@ -337,15 +408,15 @@ const Index = (props) => {
               <div className="flex gap-2 items-center">
                 <input
                   type="radio"
-                  value="association"
-                  id="association"
+                  value="associate"
+                  id="associate"
                   name="contentType"
                   className="text-gray-500 w-4 h-4 "
-                  checked={radioValue === "association"}
+                  checked={radioValue === "associate"}
                   onChange={(e) => setRadioValue(e?.target?.value)}
                 />
                 <label
-                  htmlFor="association"
+                  htmlFor="associate"
                   className="font-semibold cursor-pointer"
                 >
                   Associations
@@ -522,15 +593,15 @@ const Index = (props) => {
               <div className="flex gap-2 items-center">
                 <input
                   type="radio"
-                  value="association"
-                  id="association"
+                  value="associate"
+                  id="associate"
                   name="contentType"
                   className="text-gray-500 w-4 h-4 "
-                  checked={radioValue === "association"}
+                  checked={radioValue === "associate"}
                   onChange={(e) => setRadioValue(e?.target?.value)}
                 />
                 <label
-                  htmlFor="association"
+                  htmlFor="associate"
                   className="font-semibold cursor-pointer"
                 >
                   Associations
@@ -645,17 +716,18 @@ const Index = (props) => {
 
           <div className="w-2/3 mx-auto flex flex-row gap-3">
             <Button
-              variant="outline"
+              variant="danger"
               className="w-1/2 flex justify-center items-center"
-              onClick={closeModalAdd}
+              onClick={onDelete}
             >
-              <span className="text-base capitalize w-full"> Cancel </span>
+              <span className="text-base capitalize w-full">Delete</span>
             </Button>
             <Button
               variant="primary"
               className="w-1/2 flex justify-center items-center"
+              onClick={onUpdate}
             >
-              <span className="text-base capitalize w-full "> Upload </span>
+              <span className="text-base capitalize w-full "> Save </span>
             </Button>
           </div>
         </div>

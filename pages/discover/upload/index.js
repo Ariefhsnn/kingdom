@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { dateToString, toastify } from "../../../utils/useFunction";
 
 import { AiOutlineEdit } from "react-icons/ai";
@@ -10,6 +10,7 @@ import Link from "next/link";
 import { MdDeleteOutline } from "react-icons/md";
 import Modal from "../../../components/modal/Modal";
 import Navbar from "../../../components/navbar";
+import { RequestQueryBuilder } from "@nestjsx/crud-request";
 import Table from "../../../components/table";
 import TaskTab from "../../../components/button/TaskTab";
 import UploaderBox from "../../../components/button/UploaderBox";
@@ -20,16 +21,15 @@ import items from "../../../utils/json/discoverUploads.json";
 export default function Index(props) {
   let { token, userId } = props;
   const [sidebar, setSidebar] = useState(false);
-  const [imgData, setImgData] = useState([]);
+
   const [videoData, setVideoData] = useState([]);
-  const [boData, setBoData] = useState([]);
-  const [newsData, setNewsData] = useState([]);
+
   const [dataTable, setDataTable] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pageCount, setPageCount] = useState(1);
   const [total, setTotal] = useState(0);
   const [isSelected, setIsSelected] = useState("");
-  const [tab, setTab] = useState("Image");
+  const [tab, setTab] = useState(null);
   const [isSearch, setIsSearch] = useState("");
   const [isShowAdd, setIsShowAdd] = useState(false);
   const [isShowEdit, setIsShowEdit] = useState(false);
@@ -37,22 +37,14 @@ export default function Index(props) {
   const [val, setVal] = useState([]);
   const [radioValue, setRadioValue] = useState("");
   const [isForm, setIsForm] = useState({});
-
-  const Menus = [
-    {
-      name: "Image",
-      label: "image",
+  const [discoverType, setDiscoverType] = useState(null);
+  const [menus, setMenus] = useState(null);
+  const config = {
+    headers: {
+      "Content-Type": "multipart/form-data",
+      Authorization: `Bearer ${token}`,
     },
-    {
-      name: "Video",
-    },
-    {
-      name: "Business opportunities",
-    },
-    {
-      name: "Latest news",
-    },
-  ];
+  };
 
   const openModalAdd = () => {
     setIsShowAdd(true);
@@ -79,31 +71,77 @@ export default function Index(props) {
   };
 
   const getDiscover = async () => {
+    setLoading(true);
     try {
-      axios
-        .get("https://kingdom-api-dev.gbempower.asia/v1/discover-content")
-        .then(function (response) {
-          setDataTable(response?.data?.data);
-          // setImgData(response?.data?.data?.image);
-          // setNewsData(response?.data?.data?.news);
-          // setBoData(response?.data?.data?.business);
-          // setVideoData(response?.data?.data?.video);
-        });
+      axios.get("v1/discover").then(function (response) {
+        setDiscoverType(response?.data?.data);
+      });
     } catch (error) {
       console.log(error);
     }
   };
 
+  const getDiscoverContent = async () => {
+    if (tab) {
+      config = {
+        ...config,
+        params: {
+          content_type: tab.toUpperCase(),
+        },
+      };
+    }
+
+    try {
+      axios
+        .get(
+          "https://kingdom-api-dev.gbempower.asia/v1/discover-content",
+          config
+        )
+        .then(function (response) {
+          setDataTable(response?.data?.data);
+        })
+        .catch((err) => {
+          toastify(err?.response?.data?.message, "error");
+          setDataTable([]);
+        });
+      setLoading(false);
+    } catch (error) {
+      console.log(error);
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     getDiscover();
+    getDiscoverContent();
   }, []);
 
   useEffect(() => {
-    if (imgData?.length > 0) imgData.forEach((e) => (e["type"] = "image"));
-    if (videoData?.length > 0) videoData.forEach((e) => (e["type"] = "video"));
-    if (boData?.length > 0) boData.forEach((e) => (e["type"] = "business"));
-    if (newsData?.length > 0) newsData.forEach((e) => (e["type"] = "news"));
-  }, [imgData, videoData, boData, newsData]);
+    getDiscoverContent();
+  }, [tab]);
+
+  useEffect(() => {
+    let MenuData = [];
+    if (discoverType) {
+      discoverType.forEach((element) => {
+        MenuData.push({ name: element?.name });
+      });
+    }
+    setMenus(MenuData);
+  }, [discoverType]);
+
+  useEffect(() => {
+    if (menus?.length > 0) {
+      setTab(menus[0]?.name);
+    }
+  }, [menus]);
+
+  // useEffect(() => {
+  //   if (imgData?.length > 0) imgData.forEach((e) => (e["type"] = "image"));
+  //   if (videoData?.length > 0) videoData.forEach((e) => (e["type"] = "video"));
+  //   if (boData?.length > 0) boData.forEach((e) => (e["type"] = "business"));
+  //   if (newsData?.length > 0) newsData.forEach((e) => (e["type"] = "news"));
+  // }, [imgData, videoData, boData, newsData]);
 
   // useEffect(() => {
   //   if (items?.length > 0) {
@@ -119,29 +157,31 @@ export default function Index(props) {
   //   }
   // }, [items]);
 
-  useEffect(() => {
-    if (
-      imgData.length > 0 ||
-      videoData?.length > 0 ||
-      boData?.length > 0 ||
-      newsData?.length > 0
-    ) {
-      tab == "Image"
-        ? setTotal(imgData?.length)
-        : tab == "Video"
-        ? setTotal(videoData.length)
-        : tab == "Business opportunities"
-        ? setTotal(boData.length)
-        : setTotal(newsData.length);
-    }
-  }, [tab, imgData, boData, newsData, videoData]);
+  // useEffect(() => {
+  //   if (
+  //     imgData.length > 0 ||
+  //     videoData?.length > 0 ||
+  //     boData?.length > 0 ||
+  //     newsData?.length > 0
+  //   ) {
+  //     tab == "Image"
+  //       ? setTotal(imgData?.length)
+  //       : tab == "Video"
+  //       ? setTotal(videoData.length)
+  //       : tab == "Business opportunities"
+  //       ? setTotal(boData.length)
+  //       : setTotal(newsData.length);
+  //   }
+  // }, [tab, imgData, boData, newsData, videoData]);
+
+  console.log("tabs", tab);
 
   const Columns = [
     {
       Header: "Title",
       Footer: "Title",
       accessor: "title",
-      Cell: ({ value }) => {
+      Cell: ({ row, value }) => {
         return (
           <span
             className={`${
@@ -154,19 +194,19 @@ export default function Index(props) {
         );
       },
     },
-    {
-      Header: "Link",
-      Footer: "Link",
-      accessor: "media_url",
-      Cell: ({ value }) => {
-        return (
-          <span>
-            {value?.length > 50 ? value?.substring(50, 0) + "..." : value}
-            {/* {value} */}
-          </span>
-        );
-      },
-    },
+    // {
+    //   Header: "Link",
+    //   Footer: "Link",
+    //   accessor: "media_url",
+    //   Cell: ({ value }) => {
+    //     return (
+    //       <span>
+    //         {value?.length > 50 ? value?.substring(50, 0) + "..." : value}
+    //         {/* {value} */}
+    //       </span>
+    //     );
+    //   },
+    // },
     {
       Header: "Creation date",
       Footer: "Creation date",
@@ -174,11 +214,6 @@ export default function Index(props) {
       Cell: ({ value }) => {
         return <span> {dateToString(value)} </span>;
       },
-    },
-    {
-      Header: "Delete",
-      Footer: "Delete",
-      accessor: "delete",
     },
     {
       Header: "Action",
@@ -269,33 +304,42 @@ export default function Index(props) {
   };
 
   const onUpload = async () => {
-    // await setLoading(true);
-    // let items = new FormData();
-    // items.append('title', isForm?.title)
-    // items.append('description', isForm)
-    // const config = {
-    //   headers: {
-    //     "Content-Type": "multipart/form-data",
-    //     Authorization: `Bearer ${token}`,
-    //   },
-    // };
-    // dataImage.append("images", fileSelected[0], `${fileSelected[0].path}`);
-    // try {
-    //   const res = await axios.post(
-    //     "https://kingdom-api-dev.gbempower.asia/v1/discover-content",
-    //     data,
-    //     config
-    //   );
-    //   let { status, data } = res;
-    //   if (status == 200 || status == 201) {
-    //     await toast("Data succesfully added!");
-    //     await getDiscover();
-    //     await closeModalAdd();
-    //   }
-    // } catch (error) {
-    //   console.log(error?.response);
-    // }
+    await setLoading(true);
+    let items = new FormData();
+    if (radioValue == "image") {
+      items.append("photos", fileSelected[0], `${fileSelected[0].path}`);
+    } else if (radioValue == "video") {
+      items.append("video_link", isForm?.link);
+    }
+    items.append("title", isForm?.title);
+    items.append("discover_id", "1");
+    items.append("description", "desc");
+
+    try {
+      const res = await axios.post(
+        "https://kingdom-api-dev.gbempower.asia/v1/discover-content",
+        items,
+        config
+      );
+      let { status, data } = res;
+      if (status == 200 || status == 201) {
+        await toast("Data succesfully added!");
+        await getDiscoverContent();
+        await closeModalAdd();
+      }
+    } catch (error) {
+      console.log(error?.response);
+    }
   };
+
+  useEffect(() => {
+    if (menus) {
+      console.log(
+        "find",
+        menus.some((e) => e?.name == "Video")
+      );
+    }
+  }, [menus]);
 
   return (
     <>
@@ -321,13 +365,13 @@ export default function Index(props) {
             </Button>
           </div>
           <span className="text-lg font-semibold">
-            Content ({items?.length})
+            Content ({dataTable?.length})
           </span>
-          <TaskTab options={Menus} value={tab} setValue={setTab}>
+          <TaskTab options={menus} value={tab} setValue={setTab}>
             <div className="md:ml-10 w-full md:w-[50%] flex justify-between items-center">
               <div className="w-60">
                 <GlobalFilter
-                  preFilteredRows={tab == "Tab" ? dataTable : null}
+                  preFilteredRows={dataTable}
                   filter={isSearch}
                   setFilter={setIsSearch}
                   loading={loading}
@@ -342,11 +386,11 @@ export default function Index(props) {
                 loading={loading}
                 setLoading={setLoading}
                 Columns={Columns}
-                items={imgData}
-                setIsSelected={setIsSelected}
-                totalPages={pageCount}
-                total={total}
-                setPages={pageCount}
+                items={dataTable}
+                // setIsSelected={setIsSelected}
+                // totalPages={pageCount}
+                // total={total}
+                // setPages={pageCount}
               />
             </div>
           ) : tab == "Video" ? (
@@ -355,7 +399,7 @@ export default function Index(props) {
                 loading={loading}
                 setLoading={setLoading}
                 Columns={Columns}
-                items={videoData}
+                items={dataTable}
                 setIsSelected={setIsSelected}
                 totalPages={pageCount}
                 total={total}
@@ -368,7 +412,7 @@ export default function Index(props) {
                 loading={loading}
                 setLoading={setLoading}
                 Columns={Columns}
-                items={boData}
+                items={dataTable}
                 setIsSelected={setIsSelected}
                 totalPages={pageCount}
                 total={total}
@@ -381,7 +425,7 @@ export default function Index(props) {
                 loading={loading}
                 setLoading={setLoading}
                 Columns={Columns}
-                items={newsData}
+                items={dataTable}
                 setIsSelected={setIsSelected}
                 totalPages={pageCount}
                 total={total}
@@ -418,69 +462,51 @@ export default function Index(props) {
               Content Type
             </label>
             <div className="flex flex-col gap-2">
-              <div className="flex gap-2 items-center">
-                <input
-                  type="radio"
-                  value="image"
-                  id="image"
-                  name="contentType"
-                  className="text-gray-500 w-4 h-4"
-                  checked={radioValue === "image"}
-                  onChange={(e) => setRadioValue(e?.target?.value)}
-                />
-                <label htmlFor="image" className="font-semibold cursor-pointer">
-                  Image
-                </label>
-              </div>
-              <div className="flex gap-2 items-center">
-                <input
-                  type="radio"
-                  value="video"
-                  id="video"
-                  name="contentType"
-                  className="text-gray-500 w-4 h-4 "
-                  checked={radioValue === "video"}
-                  onChange={(e) => setRadioValue(e?.target?.value)}
-                />
-                <label htmlFor="video" className="font-semibold cursor-pointer">
-                  Video
-                </label>
-              </div>
-              <div className="flex gap-2 items-center">
-                <input
-                  type="radio"
-                  value="business"
-                  id="BusinessOpportunities"
-                  name="contentType"
-                  className="text-gray-500 w-4 h-4"
-                  checked={radioValue === "business"}
-                  onChange={(e) => setRadioValue(e?.target?.value)}
-                />
-                <label
-                  htmlFor="BusinessOpportunities"
-                  className="font-semibold cursor-pointer"
-                >
-                  Business opportunities
-                </label>
-              </div>
-
-              <div className="flex gap-2 items-center">
-                <input
-                  type="radio"
-                  value="news"
-                  id="latestNews"
-                  name="contentType"
-                  className="text-gray-500 w-4 h-4"
-                  checked={radioValue === "news"}
-                  onChange={(e) => setRadioValue(e?.target?.value)}
-                />
-                <label
-                  htmlFor="latestNews"
-                  className="font-semibold cursor-pointer"
-                >
-                  Latest news
-                </label>
-              </div>
+              {menus && menus.length > 0 ? (
+                <>
+                  {menus.some((e) => e?.name == "Image") ? (
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="radio"
+                        value="image"
+                        id="image"
+                        name="contentType"
+                        className="text-gray-500 w-4 h-4"
+                        checked={radioValue === "image"}
+                        onChange={(e) => setRadioValue(e?.target?.value)}
+                      />
+                      <label
+                        htmlFor="image"
+                        className="font-semibold cursor-pointer"
+                      >
+                        Image
+                      </label>
+                    </div>
+                  ) : (
+                    menus.some((e) =>
+                      e?.name == "Video" ? (
+                        <div className="flex gap-2 items-center">
+                          <input
+                            type="radio"
+                            value="video"
+                            id="video"
+                            name="contentType"
+                            className="text-gray-500 w-4 h-4 "
+                            checked={radioValue === "video"}
+                            onChange={(e) => setRadioValue(e?.target?.value)}
+                          />
+                          <label
+                            htmlFor="video"
+                            className="font-semibold cursor-pointer"
+                          >
+                            Video
+                          </label>
+                        </div>
+                      ) : null
+                    )
+                  )}
+                </>
+              ) : null}
             </div>
           </div>
 
