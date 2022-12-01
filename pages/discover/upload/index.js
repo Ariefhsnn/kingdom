@@ -63,7 +63,8 @@ export default function Index(props) {
   const openModalEdit = (items) => {
     setIsForm(items);
     setIsShowEdit(true);
-    setRadioValue(items?.type);
+    setRadioValue(items?.discover_id);
+    console.log("data", items?.discover_id);
   };
 
   const closeModalEdit = () => {
@@ -298,9 +299,7 @@ export default function Index(props) {
   const otherForm = (isEdit) => {
     return (
       <div className="w-full flex flex-col mb-5">
-        <label className="font-bold text-base">
-          Upload cover image {radioValue == "business" ? "(optional)" : ""}
-        </label>
+        <label className="font-bold text-base">Upload cover image</label>
         <UploaderBox files={fileSelected} setFiles={setFileSelected} />
         {isForm?.images?.length > 0 ? (
           <span> {isForm?.images} </span>
@@ -331,28 +330,63 @@ export default function Index(props) {
     let items = new FormData();
     if (contentType[0]?.type == "IMAGE") {
       items.append("photos", fileSelected[0], `${fileSelected[0].path}`);
+      items.append("description", "desc");
     } else if (contentType[0]?.type == "VIDEO") {
       items.append("video_link", isForm?.link);
+      items.append("description", "desc");
+    } else {
+      items.append("photos", fileSelected[0], `${fileSelected[0].path}`);
+      items.append("description", isForm?.content);
     }
     items.append("title", isForm?.title);
     items.append("discover_id", Number(radioValue));
-    items.append("description", "desc");
 
-    try {
-      const res = await axios.post(
+    await axios
+      .post(
         "https://kingdom-api-dev.gbempower.asia/v1/discover-content",
         items,
         config
-      );
-      let { status, data } = res;
-      if (status == 200 || status == 201) {
-        await toast("Data succesfully added!");
-        await getDiscoverContent();
-        await closeModalAdd();
-      }
-    } catch (error) {
-      console.log(error?.response);
+      )
+      .then((res) => {
+        toastify(res?.data?.message, "success");
+        getDiscoverContent();
+        closeModalAdd();
+      })
+      .catch((err) => {
+        toastify(err?.message, "error");
+      });
+  };
+
+  const onUpdate = async () => {
+    await setLoading(true);
+    let items = new FormData();
+    if (contentType[0]?.type == "IMAGE") {
+      items.append("photos", fileSelected[0], `${fileSelected[0].path}`);
+      items.append("description", "desc");
+    } else if (contentType[0]?.type == "VIDEO") {
+      items.append("video_link", isForm?.link);
+      items.append("description", "desc");
+    } else {
+      items.append("photos", fileSelected[0], `${fileSelected[0].path}`);
+      items.append("description", isForm?.content);
     }
+    items.append("title", isForm?.title);
+    items.append("discover_id", Number(radioValue));
+
+    await axios
+      .put(
+        `https://kingdom-api-dev.gbempower.asia/v1/discover-content/${isForm?.id}`,
+        items,
+        config
+      )
+      .then((res) => {
+        toastify(res?.data?.message, "success");
+        getDiscoverContent();
+        closeModalAdd();
+      })
+      .catch((err) => {
+        toastify(err?.message, "error");
+      });
   };
 
   const onDelete = async () => {
@@ -537,23 +571,6 @@ export default function Index(props) {
                           {e?.name}
                         </label>
                       </div>
-                      {/* <div className="flex gap-2 items-center">
-                        <input
-                          type="radio"
-                          value="video"
-                          id="video"
-                          name="contentType"
-                          className="text-gray-500 w-4 h-4 "
-                          checked={radioValue === "video"}
-                          onChange={(e) => setRadioValue(e?.target?.value)}
-                        />
-                        <label
-                          htmlFor="video"
-                          className="font-semibold cursor-pointer"
-                        >
-                          Video
-                        </label>
-                      </div> */}
                     </React.Fragment>
                   ))}
                 </>
@@ -567,7 +584,7 @@ export default function Index(props) {
                 ? imageForm(false)
                 : contentType[0]?.type == "VIDEO"
                 ? videoForm()
-                : contentType[0]?.type == "BUSSINES" ||
+                : contentType[0]?.type == "ARTICLE" ||
                   contentType[0]?.type == "NEWS"
                 ? otherForm(false)
                 : null}
@@ -631,69 +648,32 @@ export default function Index(props) {
               Content Type
             </label>
             <div className="flex flex-col gap-2">
-              <div className="flex gap-2 items-center">
-                <input
-                  type="radio"
-                  value="image"
-                  id="image"
-                  name="contentType"
-                  className="text-gray-500 w-4 h-4"
-                  checked={radioValue === "image"}
-                  onChange={(e) => setRadioValue(e?.target?.value)}
-                />
-                <label htmlFor="image" className="font-semibold cursor-pointer">
-                  Image
-                </label>
-              </div>
-              <div className="flex gap-2 items-center">
-                <input
-                  type="radio"
-                  value="video"
-                  id="video"
-                  name="contentType"
-                  className="text-gray-500 w-4 h-4 "
-                  checked={radioValue === "video"}
-                  onChange={(e) => setRadioValue(e?.target?.value)}
-                />
-                <label htmlFor="video" className="font-semibold cursor-pointer">
-                  Video
-                </label>
-              </div>
-              <div className="flex gap-2 items-center">
-                <input
-                  type="radio"
-                  value="business"
-                  id="BusinessOpportunities"
-                  name="contentType"
-                  className="text-gray-500 w-4 h-4"
-                  checked={radioValue === "business"}
-                  onChange={(e) => setRadioValue(e?.target?.value)}
-                />
-                <label
-                  htmlFor="BusinessOpportunities"
-                  className="font-semibold cursor-pointer"
-                >
-                  Business opportunities
-                </label>
-              </div>
-
-              <div className="flex gap-2 items-center">
-                <input
-                  type="radio"
-                  value="news"
-                  id="latestNews"
-                  name="contentType"
-                  className="text-gray-500 w-4 h-4"
-                  checked={radioValue === "news"}
-                  onChange={(e) => setRadioValue(e?.target?.value)}
-                />
-                <label
-                  htmlFor="latestNews"
-                  className="font-semibold cursor-pointer"
-                >
-                  Latest news
-                </label>
-              </div>
+              {menus && menus.length > 0 ? (
+                <>
+                  {menus.map((e) => (
+                    <React.Fragment key={e?.id}>
+                      <div className="flex gap-2 items-center" key={e?.id}>
+                        <input
+                          type="radio"
+                          value={e?.id}
+                          key={e?.id}
+                          id={e?.id}
+                          name="contentType"
+                          className="text-gray-500 w-4 h-4"
+                          checked={radioValue == e?.id}
+                          onChange={(e) => setRadioValue(e?.target?.value)}
+                        />
+                        <label
+                          htmlFor={e?.id}
+                          className="font-semibold cursor-pointer"
+                        >
+                          {e?.name}
+                        </label>
+                      </div>
+                    </React.Fragment>
+                  ))}
+                </>
+              ) : null}
             </div>
           </div>
 
@@ -704,13 +684,18 @@ export default function Index(props) {
             </span>
           </div>
 
-          <div className="w-full">
-            {radioValue == "image"
-              ? imageForm(true)
-              : radioValue == "video"
-              ? videoForm()
-              : otherForm(true)}
-          </div>
+          {contentType && (
+            <div className="w-full">
+              {contentType[0]?.type == "IMAGE"
+                ? imageForm(false)
+                : contentType[0]?.type == "VIDEO"
+                ? videoForm()
+                : contentType[0]?.type == "ARTICLE" ||
+                  contentType[0]?.type == "NEWS"
+                ? otherForm(false)
+                : null}
+            </div>
+          )}
 
           <div className="w-full mx-auto flex flex-row gap-3">
             <Button
@@ -723,6 +708,7 @@ export default function Index(props) {
             <Button
               variant="primary"
               className="w-1/2 flex justify-center items-center"
+              onClick={onUpdate}
             >
               <span className="text-base capitalize w-full "> Save </span>
             </Button>

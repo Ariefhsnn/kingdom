@@ -121,6 +121,16 @@ const Index = (props) => {
         },
       };
     }
+
+    if (isSearch) {
+      config = {
+        ...config,
+        params: {
+          q: isSearch,
+        },
+      };
+    }
+
     try {
       axios
         .get("v1/directory", config)
@@ -137,9 +147,9 @@ const Index = (props) => {
     }
   };
 
-  // useEffect(() => {
-  //   getDirectory();
-  // }, []);
+  useEffect(() => {
+    getDirectory();
+  }, [isSearch]);
 
   useEffect(() => {
     getDirectory();
@@ -215,6 +225,9 @@ const Index = (props) => {
     items.append("phone", isForm?.phone);
     items.append("email", isForm?.email);
     items.append("opening_hours", date);
+    if (fileSelected?.length > 0) {
+      items.append("photos", fileSelected[0], `${fileSelected[0]?.name}`);
+    }
 
     try {
       let res = await axios.post(`v1/directory`, items);

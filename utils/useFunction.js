@@ -1,5 +1,6 @@
 import { BsCheckCircleFill } from "react-icons/bs";
 import { MdDangerous } from "react-icons/md";
+import moment from "moment";
 import { toast } from "react-toastify";
 
 export const toastify = (msg, type) => {
@@ -17,8 +18,8 @@ export const toastify = (msg, type) => {
 };
 
 export const dateToString = (date) => {
-  let year = new Date(date).getFullYear();
-  let month = new Date(date).getMonth();
-  let day = new Date(date).getDay();
-  return `${day} - ${month} - ${year}`;
+  if (date) {
+    return moment(date).format("DD-MM-YYYY");
+    // return new Date(date).toISOString().split("T")[0];
+  }
 };

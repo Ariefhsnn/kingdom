@@ -30,6 +30,12 @@ const Index = (props) => {
   const [val, setVal] = useState([]);
   const [radioValue, setRadioValue] = useState("");
   const [isForm, setIsForm] = useState({});
+  const config = {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  };
 
   const Menus = [
     {
@@ -60,9 +66,17 @@ const Index = (props) => {
   };
 
   const getDiscover = async () => {
+    if (isSearch) {
+      config = {
+        ...config,
+        params: {
+          q: isSearch,
+        },
+      };
+    }
     try {
       axios
-        .get("v1/discover")
+        .get("v1/discover", config)
         .then(function (response) {
           setDataTable(response?.data?.data);
         })
@@ -78,6 +92,10 @@ const Index = (props) => {
   useEffect(() => {
     getDiscover();
   }, []);
+
+  useEffect(() => {
+    getDiscover();
+  }, [isSearch]);
 
   useEffect(() => {
     if (items?.length > 0) {
@@ -171,21 +189,18 @@ const Index = (props) => {
     items.append("name", isForm?.name);
     items.append("content_type", radioValue.toUpperCase());
 
-    try {
-      const res = await axios.post(`v1/discover`, items);
-      let { data, status } = res;
-      console.log(res);
-      if (status == 200 || status == 201) {
-        console.log(data);
-        toastify(data?.message, "success");
-        await getDiscover();
-        await setLoading(false);
-        await closeModalAdd();
-      }
-    } catch (error) {
-      let { data } = await error?.response;
-      toastify(data?.message, "error");
-    }
+    await axios
+      .post(`v1/discover`, items)
+      .then((res) => {
+        toastify(res?.data?.message, "success");
+        getDiscover();
+        setLoading(false);
+        closeModalAdd();
+      })
+      .catch((err) => {
+        toastify(err?.message, "error");
+        setLoading(false);
+      });
   };
 
   const onUpdate = async () => {
@@ -194,19 +209,18 @@ const Index = (props) => {
     items.append("name", isForm?.name);
     items.append("content_type", radioValue.toUpperCase());
 
-    try {
-      const res = await axios.put(`v1/discover/${isForm?.id}`, items);
-      let { data, status } = res;
-      if (status == 200 || status == 201) {
-        toastify(data?.message, "success");
-        await setLoading(false);
-        await getDiscover();
-        await closeModalEdit();
-      }
-    } catch (error) {
-      let { data } = await error?.response;
-      toastify(data?.message, "error");
-    }
+    await axios
+      .put(`v1/discover/${isForm?.id}`, items)
+      .then((res) => {
+        toastify(res?.data?.message, "success");
+        setLoading(false);
+        getDiscover();
+        closeModalEdit();
+      })
+      .catch((err) => {
+        toastify(err?.message, "error");
+        setLoading(false);
+      });
   };
 
   return (
@@ -446,8 +460,7 @@ const Index = (props) => {
           <div className="w-full mb-5 flex flex-col gap-1">
             <label className="font-bold text-base"> Creation Date </label>
             <span className="text-gray-500 text-base font-semibold">
-              {" "}
-              {isForm?.created_at}{" "}
+              {dateToString(isForm?.created_at)}
             </span>
           </div>
 

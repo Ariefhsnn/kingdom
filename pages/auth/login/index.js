@@ -4,6 +4,7 @@ import { getCookie, setCookie } from "../../../utils/cookie";
 import { BiLoaderAlt } from "react-icons/bi";
 import Button from "../../../components/button";
 import Head from "next/head";
+import Image from "next/image";
 import axios from "axios";
 import { toastify } from "../../../utils/useFunction";
 import { useRouter } from "next/router";
@@ -27,7 +28,7 @@ export default function Login() {
       let { data, status } = res;
 
       if (status == 200) {
-        toastify(data?.message, "success");
+        toastify("Logged in successfully!", "success");
         await setCookie("token", data?.data?.token);
         await setCookie("userId", data?.data?.id);
         await router.push("/community");
@@ -47,11 +48,20 @@ export default function Login() {
         {/* <meta httpEquiv="Content-Security-Policy" content="upgrade-insecure-requests"/>  */}
       </Head>
       <div className="bg-gray-50 w-full h-screen p-5">
-        <div className="w-full lg:w-1/3 justify-center flex flex-col p-10 mx-auto my-5">
-          <span className="text-xl flex justify-center text-gray-700 font-bold lg:text-2xl">
-            Kingdom Business App (Logo)
+        <div className="w-full lg:w-1/3 justify-center flex flex-col p-5 mx-auto my-3">
+          <span className="text-xl flex justify-center text-gray-700 font-bold lg:text-2xl mb-5">
+            Kingdom Business App
           </span>
-          <span className="mt-10 lg:mt-20 flex justify-center text-lg font-bold text-gray-700 lg:text-2xl">
+
+          <Image
+            src="/img/Logo.png"
+            alt="logo"
+            width={200}
+            height="100%"
+            objectFit="contain"
+          />
+
+          <span className="mt-10 lg:mt-5 flex justify-center text-lg font-bold text-gray-700 lg:text-2xl">
             CMS Portal
           </span>
           <div className="flex flex-col justify-center w-full my-10 lg:my-20 gap-5">
@@ -109,7 +119,7 @@ export default function Login() {
               </Button>
             </div>
           </div>
-          <span className="mt-5 lg:mt-20 text-gray-700 font-semibold flex justify-center lg:text-2xl">
+          <span className="mt-5 lg:mt-5 text-gray-700 font-semibold flex justify-center lg:text-2xl">
             Powered by GB
           </span>
         </div>

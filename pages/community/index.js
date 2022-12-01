@@ -7,8 +7,6 @@ import { BiLoaderAlt } from "react-icons/bi";
 import Button from "../../components/button";
 import DefaultSelect from "../../components/select";
 import { GlobalFilter } from "../../components/table/components/GlobalFilter";
-import Group from "../../utils/json/groups.json";
-import Icon from "../../components/icon";
 import Layouts from "../../components/Layouts";
 import Modal from "../../components/modal/Modal";
 import Navbar from "../../components/navbar";
@@ -17,9 +15,13 @@ import TaskTab from "../../components/button/TaskTab";
 import UploaderBox from "../../components/button/UploaderBox";
 import axios from "axios";
 import { getCookie } from "../../utils/cookie";
+import { useRouter } from "next/router";
 
 export default function Index(props) {
   let { token } = props;
+  const router = useRouter();
+  const { pathname, query } = router;
+
   const [sidebar, setSidebar] = useState(false);
   const [dataTable, setDataTable] = useState([]);
   const [userData, setUserData] = useState([]);
@@ -41,6 +43,7 @@ export default function Index(props) {
   const [val, setVal] = useState([]);
   const [meta, setMeta] = useState(null);
   const [disabledBtn, setDisabledBtn] = useState(false);
+  const [removed, setRemoved] = useState(null);
 
   const config = {
     headers: {
@@ -72,22 +75,24 @@ export default function Index(props) {
   const openModalEdit = (items) => {
     setIsForm(items);
     setIsShowEdit(true);
+    setSelectedUser(items?.members);
     // console.log("items", items);
   };
 
   const closeModalEdit = () => {
     setIsShowEdit(false);
     setIsForm({});
+    setSelectedUser(null);
+    setRemoved(null);
   };
 
   const getUser = async () => {
-    try {
-      await axios.get("v1/user", config).then(function (response) {
+    await axios
+      .get("v1/user", config)
+      .then((response) => {
         setUserData(response?.data?.data);
-      });
-    } catch (error) {
-      console.log(error);
-    }
+      })
+      .catch((err) => toastify(err?.message, "error"));
   };
 
   useEffect(() => {
@@ -107,19 +112,29 @@ export default function Index(props) {
         },
       };
     }
-    try {
-      axios.get("v1/group", config).then(function (response) {
+
+    if (isSearch) {
+      config = {
+        ...config,
+        params: {
+          q: isSearch,
+        },
+      };
+    }
+
+    axios
+      .get("v1/group", config)
+      .then(function (response) {
         console.log(response?.data?.data);
         setDataTable(response?.data?.data);
         setOldData(response?.data?.data);
         setMeta(response?.data?.meta);
-        let totalPage = response?.data?.meta?.total / 5;
-        console.log(totalPage, "total");
-        setPageCount(parseInt(totalPage));
+      })
+      .catch((err) => {
+        setDataTable([]);
+        setOldData([]);
+        toastify(err?.message, "error");
       });
-    } catch (error) {
-      console.log(error);
-    }
   };
 
   useEffect(() => {
@@ -139,99 +154,87 @@ export default function Index(props) {
     console.log(1, isForm);
   }, [isForm]);
 
-  useEffect(() => {
-    setDataTable(oldData);
-    let filteredUser = dataTable.filter(
-      (e) => e?.name.toLowerCase().indexOf(isSearch.toLowerCase()) !== -1
-    );
-    setDataTable(filteredUser);
-  }, [isSearch]);
-
-  const filteredItem = useMemo(() => {
-    setDataTable(oldData);
-    if (isSearch?.length >= 3) {
-      let filters = dataTable.filter(
-        (e) => e?.name.toLowerCase().indexOf(isSearch.toLowerCase()) !== -1
-      );
-      setDataTable(filters);
-    } else {
-      setDataTable(oldData);
-      return dataTable;
-    }
-  }, [isSearch, dataTable]);
-
   const onDelete = async () => {
     await setLoading(true);
-    try {
-      const res = await axios.delete(`v1/group/${isForm?.id}`, config);
-      let { data, status } = res;
-      if (status == 204 || status == 200) {
-        await toastify(data?.message, "success");
-        await getGroup();
-        await setLoading(false);
-        await closeModalEdit();
-      } else {
-        throw data;
-      }
-    } catch (error) {
-      let { data, status } = await error?.response;
-      toastify(data?.message, "error");
-    }
+
+    await axios
+      .delete(`v1/group/${isForm?.id}`, config)
+      .then((res) => {
+        toastify(res?.data?.message, "success");
+        getGroup();
+        setLoading(false);
+        closeModalEdit();
+      })
+      .catch((err) => {
+        toastify(err?.message, "error");
+        setLoading(false);
+      });
   };
 
   const onCreate = async () => {
     setLoading(true);
     let userItems = [];
-    selectedUser.forEach((e) =>
-      userItems.push({ user_id: e?.user_id, is_admin: 1 })
-    );
+
     let items = new FormData();
+    if (selectedUser?.length > 0) {
+      selectedUser.forEach((e) =>
+        userItems.push({ user_id: e?.user_id, is_admin: 1 })
+      );
+      items.append("admins", JSON.stringify(userItems));
+    }
     items.append("name", isForm?.name);
     items.append("description", isForm?.description);
     items.append("photos", fileSelected[0], `${fileSelected[0]?.name}`);
-    items.append("admins", JSON.stringify(userItems));
 
-    try {
-      const res = await axios.post("v1/group", items, config);
-      let { data, status } = res;
-      console.log(res, "res");
-      if (status == 200 || status == 201) {
-        await toastify(data?.message, "success");
-        await getGroup();
-        await setLoading(false);
-        await closeModalAdd();
-      }
-    } catch (error) {
-      let { data } = error?.response;
-      console.log(data);
-    }
+    await axios
+      .post("v1/group", items, config)
+      .then((res) => {
+        toastify(res?.data?.message, "success");
+        getGroup();
+        setLoading(false);
+        closeModalAdd();
+      })
+      .catch((err) => {
+        toastify(err?.message, "error");
+        setLoading(false);
+      });
   };
+
+  useEffect(() => {
+    console.log("selected", selectedUser);
+  }, [selectedUser]);
 
   const onUpdate = async () => {
     await setLoading(true);
     let items = new FormData();
-    items.append("name", isForm?.name);
-    items.append("description", isForm?.description);
+    let userItems = [];
+    await selectedUser.forEach((e) =>
+      userItems.push({ user_id: e?.id, is_admin: 1 })
+    );
+    await items.append("name", isForm?.name);
+    await items.append("description", isForm?.description);
+    await items.append("new_admins", JSON.stringify(userItems));
+    await items.append("deleted_admins", JSON.stringify(removed));
     if (fileSelected.length > 0) {
-      items.append("new_photos", fileSelected[0], `${fileSelected[0].path}`);
+      await items.append(
+        "new_photos",
+        fileSelected[0],
+        `${fileSelected[0].path}`
+      );
     }
-    // console.log(fileSelected[0].path)
 
-    try {
-      const res = await axios.put(`v1/group/${isForm?.id}`, items, config);
-      let { data, status } = res;
-      console.log("data", res);
-      if (status == 200 || status == 201) {
-        console.log(data);
-        await toastify(data?.message, "success");
-        await getGroup();
-        await setLoading(false);
-        await closeModalEdit();
-      }
-    } catch (error) {
-      // let { data } = error?.response;
-      // console.log(data);
-    }
+    await axios
+      .put(`v1/group/${isForm?.id}`, items, config)
+      .then((res) => {
+        toastify(res?.data?.message, "success");
+        getGroup();
+        setLoading(false);
+        closeModalEdit();
+      })
+      .catch((err) => {
+        toastify(err?.message, "error");
+        setLoading(false);
+      });
   };
 
   useEffect(() => {
@@ -287,14 +290,10 @@ export default function Index(props) {
     },
   ];
 
-  const handleFileChange = (e) => {
-    setFileSelected(e);
-  };
-
   const onSelectUser = (e) => {
     let filter = userOpt.filter((element) => element?.id != e?.id);
     setUserOpt(filter);
-    if (selectedUser.length > 0) {
+    if (selectedUser?.length > 0) {
       setSelectedUser([
         ...selectedUser,
         {
@@ -320,23 +319,49 @@ export default function Index(props) {
     let data = [];
     if (userData.length > 0) {
       userData.forEach((e) => {
-        data.push({ ...e, label: e?.first_name });
+        data.push({ ...e, value: e?.id, label: e?.first_name });
       });
       setUserOpt(data);
     }
   }, [userData]);
 
-  const onRemoveAdmin = (val) => {
-    let filteredSelectedUser = selectedUser.filter(
-      (e) => e?.user_id != val?.user_id
-    );
-    setUserOpt([...userOpt, val]);
-    setSelectedUser(filteredSelectedUser);
+  const onRemoveAdmin = (val, isEdit) => {
+    if (!isEdit) {
+      let filteredSelectedUser = selectedUser.filter(
+        (e) => e?.user_id != val?.user_id
+      );
+      setUserOpt([...userOpt, val]);
+      setSelectedUser(filteredSelectedUser);
+    } else {
+      console.log(selectedUser, "selected");
+      let filteredSelectedUser = selectedUser.filter((e) => e?.id != val?.id);
+      let removedUser = selectedUser.filter((e) => e?.id == val?.id);
+      setUserOpt([...userOpt, val]);
+
+      setSelectedUser(filteredSelectedUser);
+      if (removed != null) {
+        setRemoved([...removed, removedUser[0]?.id]);
+      } else {
+        setRemoved([removedUser[0]?.id]);
+      }
+    }
   };
 
   const openToast = () => {
     toastify("test", "success");
   };
+
+  useEffect(() => {
+    // let qr = {
+    //   page: Number(query?.page) || 1,
+    //   limit: Number(query?.limit) || 10,
+    // };
+    getGroup();
+    // if (isSearch) {
+    //   let qr = { q: isSearch || query?.q };
+    //   router.replace({ pathname, query: qr });
+    // }
+  }, [isSearch]);
 
   return (
     <>
@@ -369,7 +394,7 @@ export default function Index(props) {
             <div className="md:ml-10 w-full md:w-[80%] flex justify-between items-center">
               <div className="w-60">
                 <GlobalFilter
-                  preFilteredRows={tab == "Active" ? dataTable : null}
+                  preFilteredRows={dataTable}
                   filter={isSearch}
                   setFilter={setIsSearch}
                   loading={loading}
@@ -461,7 +486,7 @@ export default function Index(props) {
                   key={e?.user_id}
                 >
                   <span className="font-bold"> {e?.name} </span>
-                  <Button onClick={() => onRemoveAdmin(e)}>
+                  <Button onClick={() => onRemoveAdmin(e, false)}>
                     <MdOutlineDelete className="w-5 h-5 text-gray-500 hover:text-red-500" />
                   </Button>
                 </div>
@@ -478,7 +503,7 @@ export default function Index(props) {
             <label className="font-bold text-base">Admin</label>
             <DefaultSelect
               value={val}
-              onChange={(e) => onSelectUser(e)}
+              setValue={(e) => onSelectUser(e)}
               isMulti={false}
               options={userOpt}
             />
@@ -573,15 +598,15 @@ export default function Index(props) {
           </div>
 
           <div className="w-full mb-5 flex flex-col gap-1">
-            <label className="font-bold text-base"> Members </label>
-            {isForm?.members?.length > 0 ? (
-              isForm?.members?.map((e) => (
+            <label className="font-bold text-base"> Admins </label>
+            {selectedUser?.length > 0 ? (
+              selectedUser?.map((e) => (
                 <div
                   className="bg-gray-100 py-2 px-4 rounded-md text-gray-500 text-base font-semibold flex flex-row justify-between"
                   key={e?.id}
                 >
                   <span> {e?.first_name} </span>
-                  <button>
+                  <button onClick={() => onRemoveAdmin(e, true)}>
                     <MdOutlineDelete className="h-5 w-5 hover:text-red-500" />
                   </button>
                 </div>

@@ -39,6 +39,7 @@ const Index = (props) => {
     console.log(items, "data");
     setIsForm(items);
     setIsShow(true);
+    setVal(items?.member_type);
   };
 
   const closeModalEdit = () => {
@@ -49,34 +50,37 @@ const Index = (props) => {
 
   // =====> API'S CONSUMING <=====
   const getUser = async () => {
-    try {
-      axios.get("v1/user", config).then(function (response) {
+    if (isSearch) {
+      config = {
+        ...config,
+        params: {
+          q: isSearch,
+        },
+      };
+    }
+    await axios
+      .get("v1/user", config)
+      .then((response) => {
         setDataTable(response?.data?.data);
         setOldData(response?.data?.data);
         setTotal(response?.data?.data?.length);
-      });
-    } catch (error) {
-      console.log(error);
-    }
+      })
+      .catch((err) => toastify(err?.message, "error"));
   };
 
   const onUpdate = async () => {
     await setLoading(true);
-    let items = { id: isForm?.id, member_type: val?.value };
-    try {
-      const res = await axios.put(`v1/user/member-type/update`, items, config);
-      let { data, status } = res;
-      if (status == 200 || status == 201) {
-        await toastify(data?.message, "success");
-        await getUser();
-        await setLoading(false);
-      } else {
-        throw data;
-      }
-    } catch (error) {
-      let { data, status } = await error?.response;
-      toastify(data?.message, "error");
-    }
+    let items = { id: isForm?.id, member_type: val };
+
+    await axios
+      .put(`v1/user/member-type/update`, items, config)
+      .then((res) => {
+        toastify(res?.data?.message, "success");
+        getUser();
+        setLoading(false);
+        closeModalEdit();
+      })
+      .catch((err) => toastify(err?.message, "error"));
   };
 
   const onDelete = async () => {
@@ -100,6 +104,10 @@ const Index = (props) => {
   useEffect(() => {
     getUser();
   }, []);
+
+  useEffect(() => {
+    getUser();
+  }, [isSearch]);
 
   // =====> FILTERING <=====
   const filteredItem = useMemo(() => {
@@ -225,9 +233,10 @@ const Index = (props) => {
             <label htmlFor="role"> User Role </label>
             <DefaultSelect
               value={val}
-              onChange={(e) => setVal(e)}
+              setValue={setVal}
               isMulti={false}
               options={options}
+              isValueOnly={true}
             />
           </div>
           <div className="w-full mx-auto flex flex-row gap-3">
