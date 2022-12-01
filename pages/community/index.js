@@ -47,7 +47,7 @@ export default function Index(props) {
 
   const config = {
     headers: {
-      "Content-Type": "application/json",
+      "Content-Type": "multipart/form-data",
       Authorization: `Bearer ${token}`,
     },
   };
@@ -104,20 +104,19 @@ export default function Index(props) {
   }, [isForm, fileSelected]);
 
   const getGroup = async () => {
-    if (tab) {
+    if (tab && isSearch) {
       config = {
         ...config,
         params: {
           is_active: tab == "Active" ? 1 : 0,
+          q: isSearch,
         },
       };
-    }
-
-    if (isSearch) {
+    } else if (tab) {
       config = {
         ...config,
         params: {
-          q: isSearch,
+          is_active: tab == "Active" ? 1 : 0,
         },
       };
     }
@@ -171,10 +170,16 @@ export default function Index(props) {
       });
   };
 
+  console.log(fileSelected[0]?.path, "test");
+
   const onCreate = async () => {
     setLoading(true);
     let userItems = [];
-
+    let imgObj = {
+      type: fileSelected[0]?.type,
+      size: fileSelected[0]?.size,
+      path: fileSelected[0]?.path,
+    };
     let items = new FormData();
     if (selectedUser?.length > 0) {
       selectedUser.forEach((e) =>
@@ -184,7 +189,7 @@ export default function Index(props) {
     }
     items.append("name", isForm?.name);
     items.append("description", isForm?.description);
-    items.append("photos", fileSelected[0], `${fileSelected[0]?.name}`);
+    items.append("icon", JSON.stringify(imgObj));
 
     await axios
       .post("v1/group", items, config)

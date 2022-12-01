@@ -22,7 +22,7 @@ function MyApp({ Component, pageProps }) {
         position="top-right"
         theme="light"
         // progressStyle={{ backgroundColor: "#324158" }}
-        limit={300}
+        limit={3}
       />
       <Component {...pageProps} />
     </>

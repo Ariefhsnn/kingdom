@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { getCookie, setCookie } from "../../../utils/cookie";
 
 import { BiLoaderAlt } from "react-icons/bi";
@@ -13,6 +13,7 @@ export default function Login() {
   let router = useRouter();
   const [isForm, setIsForm] = useState({});
   const [loading, setLoading] = useState(false);
+  const [isDisabled, setIsDisabled] = useState(false);
   const config = {
     headers: {
       "Access-Control-Allow-Origin": "*",
@@ -40,6 +41,15 @@ export default function Login() {
       await setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!isForm?.email || !isForm?.password) {
+      setIsDisabled(true);
+    } else {
+      setIsDisabled(false);
+    }
+  }, [isForm]);
+
   return (
     <>
       <Head>
@@ -65,59 +75,63 @@ export default function Login() {
             CMS Portal
           </span>
           <div className="flex flex-col justify-center w-full my-10 lg:my-20 gap-5">
-            <div className="flex flex-col md:flex-row w-full items-center">
-              <label
-                htmlFor="email"
-                className="font-semibold text-gray-600 focus:outline-none border-none outline-none w-full lg:w-1/4 lg:text-base"
-              >
-                Email
-              </label>
-              <input
-                type="email"
-                className="bg-gray-100 px-4 py-1.5 rounded w-full lg:w-3/4 focus:outline-none text-gray-500"
-                onChange={(e) =>
-                  setIsForm({ ...isForm, email: e?.target.value })
-                }
-              />
-            </div>
-            <div className="flex flex-col md:flex-row items-center">
-              <label
-                htmlFor="password"
-                className="font-semibold text-gray-600  w-full lg:w-1/4"
-              >
-                {" "}
-                Password{" "}
-              </label>
-              <input
-                type="password"
-                className="bg-gray-100 px-4 py-1.5 rounded w-full lg:w-3/4 focus:outline-none text-gray-500"
-                onChange={(e) =>
-                  setIsForm({ ...isForm, password: e?.target.value })
-                }
-              />
-            </div>
-            <div className="lg:mt-10">
-              <Button
-                variant="secondary"
-                className="bg-sky-600 hover:bg-sky-700 shadow-lg w-full py-1.5 rounded-md lg:w-[40%] lg:flex mx-auto"
-                onClick={onLogin}
-                disabled={loading}
-              >
-                {loading ? (
-                  <div className="flex flex-row items-center gap-2 w-full justify-center">
-                    <BiLoaderAlt className="h-5 w-5 animate-spin-slow" />
-                    <span className="text-white font-semibold text-sm">
-                      {" "}
-                      Proccessing{" "}
+            <form>
+              <div className="flex flex-col md:flex-row w-full items-center">
+                <label
+                  htmlFor="email"
+                  className="font-semibold text-gray-600 focus:outline-none border-none outline-none w-full lg:w-1/4 lg:text-base"
+                >
+                  Email
+                </label>
+                <input
+                  type="email"
+                  className="bg-gray-100 px-4 py-1.5 rounded w-full lg:w-3/4 focus:outline-none text-gray-500"
+                  required
+                  onChange={(e) =>
+                    setIsForm({ ...isForm, email: e?.target.value })
+                  }
+                />
+              </div>
+              <div className="flex flex-col md:flex-row items-center">
+                <label
+                  htmlFor="password"
+                  className="font-semibold text-gray-600  w-full lg:w-1/4"
+                >
+                  {" "}
+                  Password{" "}
+                </label>
+                <input
+                  type="password"
+                  className="bg-gray-100 px-4 py-1.5 rounded w-full lg:w-3/4 focus:outline-none text-gray-500"
+                  required
+                  onChange={(e) =>
+                    setIsForm({ ...isForm, password: e?.target.value })
+                  }
+                />
+              </div>
+              <div className="lg:mt-10">
+                <Button
+                  variant="secondary"
+                  className="bg-sky-600 hover:bg-sky-700 shadow-lg w-full py-1.5 rounded-md lg:w-[40%] lg:flex mx-auto"
+                  onClick={onLogin}
+                  disabled={loading || isDisabled}
+                >
+                  {loading ? (
+                    <div className="flex flex-row items-center gap-2 w-full justify-center">
+                      <BiLoaderAlt className="h-5 w-5 animate-spin-slow" />
+                      <span className="text-white font-semibold text-sm">
+                        {" "}
+                        Proccessing{" "}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="flex justify-center text-white font-semibold lg:text-sm mx-auto">
+                      Login
                     </span>
-                  </div>
-                ) : (
-                  <span className="flex justify-center text-white font-semibold lg:text-sm mx-auto">
-                    Login
-                  </span>
-                )}
-              </Button>
-            </div>
+                  )}
+                </Button>
+              </div>
+            </form>
           </div>
           <span className="mt-5 lg:mt-5 text-gray-700 font-semibold flex justify-center lg:text-2xl">
             Powered by GB
