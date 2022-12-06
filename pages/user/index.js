@@ -159,18 +159,14 @@ const Index = (props) => {
         return <span> {dateToString(value)} </span>;
       },
     },
-    // {
-    //   Header: "Delete",
-    //   Footer: "Delete",
-    //   accessor: "",
-    //   Cell: ({ row }) => {
-    //     return (
-    //       <Button variant="danger" onClick={() => onDelete(row?.original?.id)}>
-    //         Delete
-    //       </Button>
-    //     );
-    //   },
-    // },
+    {
+      Header: "Member type",
+      Footer: "Member type",
+      accessor: "member_type",
+      Cell: ({ value }) => {
+        return <p className="capitalize">{value ? value : "-"}</p>;
+      },
+    },
     {
       Header: "Action",
       Footer: "Action",

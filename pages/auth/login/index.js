@@ -75,7 +75,7 @@ export default function Login() {
             CMS Portal
           </span>
           <div className="flex flex-col justify-center w-full my-10 lg:my-20 gap-5">
-            <form>
+            <form className="flex flex-col gap-3">
               <div className="flex flex-col md:flex-row w-full items-center">
                 <label
                   htmlFor="email"
