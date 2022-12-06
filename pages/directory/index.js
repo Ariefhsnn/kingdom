@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { dateToString, toastify } from "../../utils/useFunction";
 
 import { AiOutlineEdit } from "react-icons/ai";
+import { BiLoaderAlt } from "react-icons/bi";
 import Button from "../../components/button";
 import DefaultSelect from "../../components/select";
 import { GlobalFilter } from "../../components/table/components/GlobalFilter";
@@ -11,7 +13,7 @@ import Navbar from "../../components/navbar";
 import Table from "../../components/table";
 import TaskTab from "../../components/button/TaskTab";
 import UploaderBox from "../../components/button/UploaderBox";
-import { dateToString } from "../../utils/useFunction";
+import axios from "axios";
 import { getCookie } from "../../utils/cookie";
 import items from "../../utils/json/category.json";
 
@@ -30,6 +32,13 @@ const Index = (props) => {
   const [val, setVal] = useState([]);
   const [isShowEdit, setIsShowEdit] = useState(false);
   const [isForm, setIsForm] = useState({});
+  const [meta, setMeta] = useState(null);
+  const config = {
+    headers: {
+      "Content-Type": "multipart/form-data",
+      Authorization: `Bearer ${token}`,
+    },
+  };
 
   const Menus = [
     {
@@ -49,49 +58,36 @@ const Index = (props) => {
 
   const openModalEdit = (items) => {
     setIsForm(items);
+    console.log(items);
     setIsShowEdit(true);
   };
 
   const closeModalEdit = () => {
     setIsShowEdit(false);
+    setIsForm({});
   };
-
-  const onEdit = (val) => {
-    console.log(100, val);
-  };
-
-  useEffect(() => {
-    if (items?.length > 0) {
-      setDataTable(items);
-      setTotal(items?.length);
-    } else {
-      setDataTable([]);
-    }
-  }, [items]);
 
   const Columns = [
     {
       Header: "Title",
       Footer: "Title",
-      accessor: "title",
+      accessor: "name",
     },
     {
       Header: "Content Count",
       Footer: "Content Count",
       accessor: "contentCount",
+      Cell: ({ value }) => {
+        return <span>{value ? value : "-"}</span>;
+      },
     },
     {
       Header: "Creation date",
       Footer: "Creation date",
-      accessor: "creationDate",
+      accessor: "created_at",
       Cell: ({ value }) => {
-        return <span>{dateToString(value)}</span>;
+        return <span>{value ? dateToString(value) : "-"}</span>;
       },
-    },
-    {
-      Header: "Delete",
-      Footer: "Delete",
-      accessor: "delete",
     },
     {
       Header: "Action",
@@ -119,9 +115,79 @@ const Index = (props) => {
     setVal([{ ...val, name: e?.groupName, id: e?.id }]);
   };
 
+  const getDirectory = async () => {
+    if (isSearch) {
+      config = {
+        ...config,
+        params: {
+          q: isSearch,
+        },
+      };
+    }
+    setLoading(true);
+    await axios
+      .get("v1/directory-category", config)
+      .then((res) => {
+        setDataTable(res?.data?.data);
+        setMeta(res?.data?.meta);
+      })
+      .catch((err) => toastify(err?.message, "error"));
+  };
+
   useEffect(() => {
-    console.log(val);
-  }, [val]);
+    getDirectory();
+  }, []);
+
+  useEffect(() => {
+    getDirectory();
+  }, [isSearch]);
+
+  const onCreate = async () => {
+    setLoading(true);
+    let items = new FormData();
+    items.append("name", isForm?.name);
+    items.append("icon", fileSelected[0]);
+    await axios
+      .post("v1/directory-category", items, config)
+      .then((res) => {
+        getDirectory();
+        toastify(res?.data?.message, "success");
+        setLoading(false);
+        closeModalAdd();
+      })
+      .catch((err) => toastify(err?.message, "error"));
+  };
+
+  const onDelete = async (id) => {
+    setLoading(true);
+
+    await axios
+      .delete(`v1/directory-category/${id}`, config)
+      .then((res) => {
+        getDirectory();
+        toastify(res?.data?.message, "success");
+        setLoading(false);
+        closeModalEdit();
+      })
+      .catch((err) => toastify(err?.message, "error"));
+  };
+
+  const onUpdate = async () => {
+    setLoading(true);
+    let items = new FormData();
+    items.append("name", isForm?.name);
+    if (fileSelected.length > 0) {
+      items.append("icon", fileSelected[0]);
+    }
+    await axios
+      .put(`v1/directory-category/${isForm?.id}`, items, config)
+      .then((res) => {
+        getDirectory();
+        toastify(res?.data?.message, "success");
+        setLoading(false);
+        closeModalEdit();
+      });
+  };
 
   return (
     <>
@@ -146,7 +212,9 @@ const Index = (props) => {
               <span className="flex justify-center"> New Category</span>
             </Button>
           </div>
-          <span className="text-lg font-semibold"> Category ({total}) </span>
+          <span className="text-lg font-semibold">
+            Category ({meta?.total})
+          </span>
           <TaskTab options={Menus} value={tab} setValue={setTab}>
             <div className="md:ml-10 w-full md:w-[80%] flex justify-between items-center">
               <div className="w-60">
@@ -197,6 +265,7 @@ const Index = (props) => {
             <input
               type="text"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
+              onChange={(e) => setIsForm({ ...isForm, name: e?.target?.value })}
             />
           </div>
 
@@ -216,8 +285,19 @@ const Index = (props) => {
             <Button
               variant="primary"
               className="w-1/2 flex justify-center items-center"
+              onClick={onCreate}
+              disabled={loading}
             >
-              <span className="text-base capitalize w-full "> Create </span>
+              {loading ? (
+                <div className="flex flex-row items-center gap-2 w-full justify-center">
+                  <BiLoaderAlt className="h-5 w-5 animate-spin-slow" />
+                  <span className="text-white font-semibold text-sm">
+                    Proccessing
+                  </span>
+                </div>
+              ) : (
+                <span className="text-base capitalize w-full "> Create </span>
+              )}
             </Button>
           </div>
         </div>
@@ -238,56 +318,70 @@ const Index = (props) => {
             <input
               type="text"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
-              value={isForm?.title}
-              onChange={(e) =>
-                setIsForm({ ...isForm, title: e?.target?.value })
-              }
+              value={isForm?.name || ""}
+              onChange={(e) => setIsForm({ ...isForm, name: e?.target?.value })}
             />
           </div>
 
           <div className="w-full mb-5 flex flex-col gap-1">
             <label className="font-bold text-base"> Creation Date </label>
             <span className="text-gray-500 text-base font-semibold">
-              {isForm?.creationDate}
+              {dateToString(isForm?.created_at)}
             </span>
           </div>
 
-          <div className="w-full mb-5 flex flex-col gap-1">
+          {/* <div className="w-full mb-5 flex flex-col gap-1">
             <label className="font-bold text-base"> Content Count </label>
             <span className="text-gray-500 text-base font-semibold">
               {isForm?.contentCount}
             </span>
-          </div>
+          </div> */}
 
           <div className="w-full flex flex-col mb-10 gap-5">
             <div className="w-full">
               <label className="font-bold text-base"> Category icon </label>
-              <UploaderBox files={fileSelected} setFiles={setFileSelected} />
+              <UploaderBox
+                files={fileSelected}
+                setFiles={setFileSelected}
+                preview={isForm?.icon}
+              />
             </div>
-            {isForm?.categoryIcon?.length > 0 ? (
-              <span> {isForm?.categoryIcon} </span>
-            ) : (
-              <span className="italic font-bold text-sm text-center">
-                No icon found
-              </span>
-            )}
           </div>
 
           <div className="w-full mx-auto flex flex-row gap-3">
             <Button
               variant="danger"
               className="w-1/2 flex justify-center items-center"
-              onClick={closeModalEdit}
+              onClick={() => onDelete(isForm?.id)}
+              disabled={loading}
             >
-              <span className="text-base capitalize w-full">
-                Delete Category
-              </span>
+              {loading ? (
+                <div className="flex flex-row items-center gap-2 w-full justify-center">
+                  <BiLoaderAlt className="h-5 w-5 animate-spin-slow" />
+                  <span className="font-semibold text-sm"> Proccessing </span>
+                </div>
+              ) : (
+                <span className="text-base capitalize w-full">
+                  Delete Category
+                </span>
+              )}
             </Button>
             <Button
               variant="primary"
               className="w-1/2 flex justify-center items-center"
+              onClick={onUpdate}
+              disabled={loading}
             >
-              <span className="text-base capitalize w-full "> Create </span>
+              {loading ? (
+                <div className="flex flex-row items-center gap-2 w-full justify-center">
+                  <BiLoaderAlt className="h-5 w-5 animate-spin-slow" />
+                  <span className="text-white font-semibold text-sm">
+                    Proccessing
+                  </span>
+                </div>
+              ) : (
+                <span className="text-base capitalize w-full "> Save </span>
+              )}
             </Button>
           </div>
         </div>

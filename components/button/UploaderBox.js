@@ -3,13 +3,20 @@ import React, { useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 
 const UploaderBox = (props) => {
-  let { files, setFiles } = props;
+  let { files, setFiles, preview } = props;
+
+  const [previewImg, setPreviewImg] = useState(null);
+
+  useEffect(() => {
+    if (preview) setPreviewImg(preview);
+  }, [preview]);
+
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
       "image/*": [],
     },
     onDrop: (acceptedFiles) => {
-      console.log("acc", acceptedFiles);
+      if (acceptedFiles?.length > 0) setPreviewImg(null);
       setFiles(
         acceptedFiles.map((file) =>
           Object.assign(file, {
@@ -51,8 +58,20 @@ const UploaderBox = (props) => {
         className="border-dashed border-[3px] border-gray-300 p-5 flex flex-col justify-center gap-2 bg-gray-50 rounded-lg cursor-pointer"
       >
         <input {...getInputProps()} />
-        {files?.length > 0 ? (
+        {files?.length > 0 && previewImg == null ? (
           <aside>{thumbs}</aside>
+        ) : previewImg != null ? (
+          <aside>
+            <div className="flex justify-center">
+              <img
+                className="max-h-auto max-w-[200px] w-[200px] h-auto object-cover object-center flex justify-center"
+                src={previewImg}
+                onLoad={() => {
+                  URL.revokeObjectURL(previewImg);
+                }}
+              />
+            </div>
+          </aside>
         ) : (
           <>
             <p className="text-gray-400 flex justify-center gap-2 text-sm font-bold">

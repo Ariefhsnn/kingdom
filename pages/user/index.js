@@ -18,6 +18,7 @@ const Index = (props) => {
   const [dataTable, setDataTable] = useState([]);
   const [oldData, setOldData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingExport, setLoadingExport] = useState(false);
   const [pageCount, setPageCount] = useState(1);
   const [total, setTotal] = useState(0);
   const [isSelected, setIsSelected] = useState("");
@@ -85,20 +86,31 @@ const Index = (props) => {
 
   const onDelete = async () => {
     await setLoading(true);
-    try {
-      const res = await axios.delete(`v1/user/${isForm?.id}`, config);
-      let { data, status } = res;
-      if (status == 204 || status == 200) {
-        await toastify(data?.message, "success");
-        await getUser();
-        await setLoading(false);
-      } else {
-        throw data;
-      }
-    } catch (error) {
-      let { data, status } = await error?.response;
-      toastify(data?.message, "error");
-    }
+    await axios
+      .delete(`v1/user/${isForm?.id}`, config)
+      .then((res) => {
+        toastify(res?.data?.message, "success");
+        getUser();
+        setLoading(false);
+        closeModalEdit();
+      })
+      .catch((err) => {
+        toastify(err?.message, "error");
+      });
+  };
+
+  const onExport = async () => {
+    await setLoadingExport(true);
+    await axios
+      .post(`v1/user/export-to-csv`)
+      .then((res) => {
+        console.log(res);
+        setLoadingExport(false);
+      })
+      .catch((err) => {
+        console.log(err, "error");
+        setLoadingExport(false);
+      });
   };
 
   useEffect(() => {
@@ -199,7 +211,11 @@ const Index = (props) => {
               />
             </div>
             <div className="w-40">
-              <Button variant="outlineBlue" className="flex justify-center">
+              <Button
+                variant="outlineBlue"
+                className="flex justify-center"
+                onClick={onExport}
+              >
                 Export as .xlsx
               </Button>
             </div>

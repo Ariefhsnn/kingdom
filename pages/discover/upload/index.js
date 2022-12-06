@@ -329,13 +329,13 @@ export default function Index(props) {
     await setLoading(true);
     let items = new FormData();
     if (contentType[0]?.type == "IMAGE") {
-      items.append("photos", fileSelected[0], `${fileSelected[0].path}`);
+      items.append("photos", fileSelected[0]);
       items.append("description", "desc");
     } else if (contentType[0]?.type == "VIDEO") {
       items.append("video_link", isForm?.link);
       items.append("description", "desc");
     } else {
-      items.append("photos", fileSelected[0], `${fileSelected[0].path}`);
+      items.append("photos", fileSelected[0]);
       items.append("description", isForm?.content);
     }
     items.append("title", isForm?.title);

@@ -76,7 +76,7 @@ export default function Index(props) {
     setIsForm(items);
     setIsShowEdit(true);
     setSelectedUser(items?.members);
-    // console.log("items", items);
+    console.log("items", items?.icon);
   };
 
   const closeModalEdit = () => {
@@ -170,7 +170,7 @@ export default function Index(props) {
       });
   };
 
-  console.log(fileSelected[0]?.path, "test");
+  console.log(fileSelected[0]?.File, "test");
 
   const onCreate = async () => {
     setLoading(true);
@@ -189,7 +189,8 @@ export default function Index(props) {
     }
     items.append("name", isForm?.name);
     items.append("description", isForm?.description);
-    items.append("icon", JSON.stringify(imgObj));
+    items.append("icon", fileSelected[0]);
+    items.append("photos", fileSelected[0]);
 
     await axios
       .post("v1/group", items, config)
@@ -221,11 +222,8 @@ export default function Index(props) {
     await items.append("new_admins", JSON.stringify(userItems));
     await items.append("deleted_admins", JSON.stringify(removed));
     if (fileSelected.length > 0) {
-      await items.append(
-        "new_photos",
-        fileSelected[0],
-        `${fileSelected[0].path}`
-      );
+      // await items.append("new_photos", fileSelected[0]);
+      await items.append("new_icon", fileSelected[0]);
     }
 
     await axios
@@ -367,6 +365,8 @@ export default function Index(props) {
     //   router.replace({ pathname, query: qr });
     // }
   }, [isSearch]);
+
+  console.log(fileSelected, "selected");
 
   return (
     <>
@@ -591,7 +591,11 @@ export default function Index(props) {
 
           <div className="w-full mb-5">
             <label className="font-bold text-base"> Group icon </label>
-            <UploaderBox files={fileSelected} setFiles={setFileSelected} />
+            <UploaderBox
+              files={fileSelected}
+              setFiles={setFileSelected}
+              preview={isForm?.icon}
+            />
           </div>
 
           <div className="w-full mb-5 flex flex-col gap-1">
