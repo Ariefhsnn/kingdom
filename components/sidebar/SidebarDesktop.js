@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const SidebarDesktop = (props) => {
@@ -15,11 +16,21 @@ const SidebarDesktop = (props) => {
             <div className="sticky top-0 z-40 bg-transparent px-6 py-3.5 flex flex-items transform transition-all duration-700 ease-in-out">
               <Link href="/">
                 <a className="w-full">
-                  <div className="mt-5 flex items-center gap-5">
-                    <div className="h-[60px] w-[60px] bg-black rounded-full"></div>
+                  <div className="mt-5 flex items-center gap-5 ">
+                    <div className="rounded-full">
+                      <Image
+                        src="/img/Logo.png"
+                        alt="logo"
+                        width={60}
+                        height="100%"
+                        objectFit="scale-down"
+                        className="rounded-full"
+                      />
+                    </div>
+
                     <div className="flex flex-col text-white">
-                      <p className="text-sm font-bold uppercase"> gb </p>
-                      <p className=" text-3xl font-bold"> connect </p>
+                      <p className="text-sm font-bold uppercase"> Admin </p>
+                      <p className=" text-3xl font-bold"> Kingdom </p>
                     </div>
                   </div>
                 </a>

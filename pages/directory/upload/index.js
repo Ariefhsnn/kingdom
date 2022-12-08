@@ -27,7 +27,7 @@ const Index = (props) => {
   const [isSearch, setIsSearch] = useState("");
   const [isShowAdd, setIsShowAdd] = useState(false);
   const [fileSelected, setFileSelected] = useState([]);
-  const [val, setVal] = useState([]);
+  const [tabValue, setTabValue] = useState([]);
   const [isShowEdit, setIsShowEdit] = useState(false);
   const [isForm, setIsForm] = useState({});
   const [churchesData, setChurchesData] = useState([]);
@@ -35,6 +35,7 @@ const Index = (props) => {
   const [selectedTime, setSelectedTime] = useState("");
   const [loadingExport, setLoadingExport] = useState(false);
   const [options, setOptions] = useState([]);
+  const [categoryData, setCategoryData] = useState(null);
 
   const config = {
     headers: {
@@ -62,7 +63,7 @@ const Index = (props) => {
   const closeModalAdd = () => {
     setIsShowAdd(false);
     setFileSelected([]);
-    setVal([]);
+    setTabValue([]);
     setRadioValue("");
   };
 
@@ -104,7 +105,7 @@ const Index = (props) => {
     });
 
     setOptions(categories);
-    if (categories.length > 0) setVal(categories[0].value);
+    if (categories.length > 0) setTabValue(categories[0].value);
   };
 
   useEffect(() => {
@@ -116,7 +117,7 @@ const Index = (props) => {
       config = {
         ...config,
         params: {
-          category: val,
+          category: tabValue,
         },
       };
     }
@@ -152,7 +153,7 @@ const Index = (props) => {
 
   useEffect(() => {
     getDirectory();
-  }, [val]);
+  }, [tabValue]);
 
   const Columns = [
     {
@@ -201,7 +202,7 @@ const Index = (props) => {
     let date = new Date(selectedTime).getTime();
     let items = new FormData();
     items.append("name", isForm?.name);
-    items.append("category", radioValue);
+    items.append("directory_category_id", categoryData?.id);
     items.append("description", isForm?.description);
     items.append("location", isForm?.location);
     items.append("website_url", isForm?.website_url);
@@ -230,7 +231,7 @@ const Index = (props) => {
     let date = new Date(selectedTime).getTime();
     let items = new FormData();
     items.append("name", isForm?.name);
-    items.append("category", radioValue);
+    items.append("directory_category_id", radioValue);
     items.append("description", isForm?.description);
     items.append("location", isForm?.location);
     items.append("website_url", isForm?.website_url);
@@ -289,7 +290,7 @@ const Index = (props) => {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement("a");
         link.href = url;
-        link.setAttribute("download", `Directory-Content-${date}.xlsx`);
+        link.setAttribute("download", `Directory-Content-${date}.csv`);
         document.body.appendChild(link);
         link.click();
         setLoadingExport(false);
@@ -299,6 +300,10 @@ const Index = (props) => {
         setLoadingExport(false);
       });
   };
+
+  useEffect(() => {
+    console.log(categoryData, "category");
+  }, [categoryData]);
 
   return (
     <>
@@ -314,7 +319,7 @@ const Index = (props) => {
             Directory / Upload
           </span>
           <span className="text-lg font-semibold"> Create </span>
-          <div className="w-40 my-5">
+          <div className="w-full md:w-40 my-5">
             <Button
               variant="outlineGreen"
               onClick={openModalAdd}
@@ -330,11 +335,12 @@ const Index = (props) => {
           <div className="w-full flex flex-col md:flex-row gap-2">
             <div className="w-full md:w-[30%] ">
               <DefaultSelect
-                value={val}
-                setValue={setVal}
+                value={tabValue}
+                setValue={setTabValue}
                 options={options}
                 isMulti={false}
                 isValueOnly={true}
+                instanceId="filterContentType"
               />
             </div>
             <div className="md:ml-10 w-full md:w-[70%] flex justify-between items-center flex-col md:flex-row gap-2">
@@ -361,54 +367,25 @@ const Index = (props) => {
                     </div>
                   ) : (
                     <span className="text-base capitalize w-full ">
-                      Export as .xlsx
+                      export as .csv
                     </span>
                   )}
                 </Button>
               </div>
             </div>
           </div>
-
-          {tab == "Churches" ? (
-            <div className="w-full">
-              <Table
-                loading={loading}
-                setLoading={setLoading}
-                Columns={Columns}
-                items={dataTable}
-                setIsSelected={setIsSelected}
-                totalPages={pageCount}
-                total={total}
-                setPages={pageCount}
-              />
-            </div>
-          ) : tab == "Associates" ? (
-            <div className="w-full">
-              <Table
-                loading={loading}
-                setLoading={setLoading}
-                Columns={Columns}
-                items={dataTable}
-                setIsSelected={setIsSelected}
-                totalPages={pageCount}
-                total={total}
-                setPages={pageCount}
-              />
-            </div>
-          ) : (
-            <div className="w-full">
-              <Table
-                loading={loading}
-                setLoading={setLoading}
-                Columns={Columns}
-                items={dataTable}
-                setIsSelected={setIsSelected}
-                totalPages={pageCount}
-                total={total}
-                setPages={pageCount}
-              />
-            </div>
-          )}
+          <div className="w-full">
+            <Table
+              loading={loading}
+              setLoading={setLoading}
+              Columns={Columns}
+              items={dataTable}
+              setIsSelected={setIsSelected}
+              totalPages={pageCount}
+              total={total}
+              setPages={pageCount}
+            />
+          </div>
         </main>
       </Layouts>
 
@@ -436,57 +413,14 @@ const Index = (props) => {
               Content Type
             </label>
             <div className="flex flex-col gap-2">
-              <div className="flex gap-2 items-center">
-                <input
-                  type="radio"
-                  value="church"
-                  id="church"
-                  name="contentType"
-                  className="text-gray-500 w-4 h-4"
-                  checked={radioValue === "church"}
-                  onChange={(e) => setRadioValue(e?.target?.value)}
-                />
-                <label
-                  htmlFor="church"
-                  className="font-semibold cursor-pointer"
-                >
-                  Churches
-                </label>
-              </div>
-              <div className="flex gap-2 items-center">
-                <input
-                  type="radio"
-                  value="associate"
-                  id="associate"
-                  name="contentType"
-                  className="text-gray-500 w-4 h-4 "
-                  checked={radioValue === "associate"}
-                  onChange={(e) => setRadioValue(e?.target?.value)}
-                />
-                <label
-                  htmlFor="associate"
-                  className="font-semibold cursor-pointer"
-                >
-                  Associations
-                </label>
-              </div>
-              <div className="flex gap-2 items-center">
-                <input
-                  type="radio"
-                  value="chamber"
-                  id="chamber"
-                  name="contentType"
-                  className="text-gray-500 w-4 h-4"
-                  checked={radioValue === "chamber"}
-                  onChange={(e) => setRadioValue(e?.target?.value)}
-                />
-                <label
-                  htmlFor="chamber"
-                  className="font-semibold cursor-pointer"
-                >
-                  Chambers
-                </label>
-              </div>
+              <DefaultSelect
+                value={radioValue}
+                setValue={setRadioValue}
+                options={options}
+                isMulti={false}
+                setData={setCategoryData}
+                instanceId="AddContentType"
+              />
             </div>
           </div>
 
@@ -629,57 +563,14 @@ const Index = (props) => {
               Content Type
             </label>
             <div className="flex flex-col gap-2">
-              <div className="flex gap-2 items-center">
-                <input
-                  type="radio"
-                  value="church"
-                  id="church"
-                  name="contentType"
-                  className="text-gray-500 w-4 h-4"
-                  checked={radioValue === "church"}
-                  onChange={(e) => setRadioValue(e?.target?.value)}
-                />
-                <label
-                  htmlFor="church"
-                  className="font-semibold cursor-pointer"
-                >
-                  Church
-                </label>
-              </div>
-              <div className="flex gap-2 items-center">
-                <input
-                  type="radio"
-                  value="associate"
-                  id="associate"
-                  name="contentType"
-                  className="text-gray-500 w-4 h-4 "
-                  checked={radioValue === "associate"}
-                  onChange={(e) => setRadioValue(e?.target?.value)}
-                />
-                <label
-                  htmlFor="associate"
-                  className="font-semibold cursor-pointer"
-                >
-                  Associations
-                </label>
-              </div>
-              <div className="flex gap-2 items-center">
-                <input
-                  type="radio"
-                  value="chamber"
-                  id="chamber"
-                  name="contentType"
-                  className="text-gray-500 w-4 h-4"
-                  checked={radioValue === "chamber"}
-                  onChange={(e) => setRadioValue(e?.target?.value)}
-                />
-                <label
-                  htmlFor="chamber"
-                  className="font-semibold cursor-pointer"
-                >
-                  Chambers
-                </label>
-              </div>
+              <DefaultSelect
+                value={radioValue}
+                setValue={setRadioValue}
+                options={options}
+                isMulti={false}
+                isValueOnly={false}
+                instanceId="EditContentType"
+              />
             </div>
           </div>
 

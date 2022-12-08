@@ -241,7 +241,7 @@ const Index = (props) => {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement("a");
         link.href = url;
-        link.setAttribute("download", `Discover-${date}.xlsx`);
+        link.setAttribute("download", `Discover-${date}.csv`);
         document.body.appendChild(link);
         link.click();
         setLoadingExport(false);
@@ -266,7 +266,7 @@ const Index = (props) => {
             Discover / Create
           </span>
           <span className="text-lg font-semibold"> Create </span>
-          <div className="w-40 my-5">
+          <div className="w-full md:w-40 my-5">
             <Button
               variant="outlineGreen"
               onClick={openModalAdd}
@@ -279,8 +279,8 @@ const Index = (props) => {
             Tabs ({dataTable?.length})
           </span>
           <TaskTab options={Menus} value={tab} setValue={setTab}>
-            <div className="md:ml-10 w-full md:w-[80%] flex justify-between items-center">
-              <div className="w-60">
+            <div className="md:ml-10 w-full md:w-[80%] flex justify-between items-center flex-col md:flex-row gap-2">
+              <div className="w-full md:w-60">
                 <GlobalFilter
                   preFilteredRows={tab == "Tab" ? dataTable : null}
                   filter={isSearch}
@@ -289,7 +289,7 @@ const Index = (props) => {
                   setLoading={setLoading}
                 />
               </div>
-              <div className="w-40">
+              <div className="w-full md:w-40">
                 <Button
                   variant="outlineBlue"
                   className="flex justify-center"
@@ -304,7 +304,7 @@ const Index = (props) => {
                   ) : (
                     <span className="text-base capitalize w-full ">
                       {" "}
-                      Export as .xlsx{" "}
+                      export as .csv{" "}
                     </span>
                   )}
                 </Button>

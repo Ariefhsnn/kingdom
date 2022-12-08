@@ -45,6 +45,7 @@ export default function Index(props) {
   const [disabledBtn, setDisabledBtn] = useState(false);
   const [removed, setRemoved] = useState(null);
   const [loadingExport, setLoadingExport] = useState(false);
+  const [loadingDelete, setLoadingDelete] = useState(false);
 
   const config = {
     headers: {
@@ -105,6 +106,7 @@ export default function Index(props) {
   }, [isForm, fileSelected]);
 
   const getGroup = async () => {
+    setLoading(true);
     if (tab && isSearch) {
       config = {
         ...config,
@@ -129,10 +131,12 @@ export default function Index(props) {
         setDataTable(response?.data?.data);
         setOldData(response?.data?.data);
         setMeta(response?.data?.meta);
+        setLoading(false);
       })
       .catch((err) => {
         setDataTable([]);
         setOldData([]);
+        setLoading(false);
         toastify(err?.message, "error");
       });
   };
@@ -155,19 +159,19 @@ export default function Index(props) {
   }, [isForm]);
 
   const onDelete = async () => {
-    await setLoading(true);
+    await setLoadingDelete(true);
 
     await axios
       .delete(`v1/group/${isForm?.id}`, config)
       .then((res) => {
         toastify(res?.data?.message, "success");
         getGroup();
-        setLoading(false);
+        setLoadingDelete(false);
         closeModalEdit();
       })
       .catch((err) => {
         toastify(err?.message, "error");
-        setLoading(false);
+        setLoadingDelete(false);
       });
   };
 
@@ -258,7 +262,7 @@ export default function Index(props) {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement("a");
         link.href = url;
-        link.setAttribute("download", `Group-${date}.xlsx`);
+        link.setAttribute("download", `Group-${date}.csv`);
         document.body.appendChild(link);
         link.click();
         setLoadingExport(false);
@@ -411,7 +415,7 @@ export default function Index(props) {
             Community / Group
           </span>
           <span className="text-lg font-semibold"> Create </span>
-          <div className="w-40 my-5">
+          <div className="w-full md:w-40 my-5">
             <Button
               variant="outlineGreen"
               onClick={openModalAdd}
@@ -421,12 +425,11 @@ export default function Index(props) {
             </Button>
           </div>
           <span className="text-lg font-semibold">
-            {" "}
             Groups ({dataTable?.length})
           </span>
           <TaskTab options={Menus} value={tab} setValue={setTab}>
-            <div className="md:ml-10 w-full md:w-[80%] flex justify-between items-center">
-              <div className="w-60">
+            <div className="md:ml-10 w-full md:w-[80%] flex flex-col md:flex-row justify-between items-center gap-2">
+              <div className="w-full md:w-60">
                 <GlobalFilter
                   preFilteredRows={dataTable}
                   filter={isSearch}
@@ -435,7 +438,7 @@ export default function Index(props) {
                   setLoading={setLoading}
                 />
               </div>
-              <div className="w-40">
+              <div className="w-full md:w-40">
                 <Button
                   variant="outlineBlue"
                   className="flex justify-center"
@@ -451,41 +454,25 @@ export default function Index(props) {
                     </div>
                   ) : (
                     <span className="text-base capitalize w-full ">
-                      {" "}
-                      Export as .xlsx{" "}
+                      Export as .csv
                     </span>
                   )}
                 </Button>
               </div>
             </div>
           </TaskTab>
-          {tab == "Active" ? (
-            <div className="w-full">
-              <Table
-                loading={loading}
-                setLoading={setLoading}
-                Columns={Columns}
-                items={dataTable}
-                setIsSelected={setIsSelected}
-                totalPages={pageCount}
-                total={meta?.total}
-                setPages={meta?.page}
-              />
-            </div>
-          ) : (
-            <div className="w-full">
-              <Table
-                loading={loading}
-                setLoading={setLoading}
-                Columns={Columns}
-                items={dataTable}
-                setIsSelected={setIsSelected}
-                totalPages={pageCount}
-                total={meta?.total}
-                setPages={meta?.page}
-              />
-            </div>
-          )}
+          <div className="w-full">
+            <Table
+              loading={loading}
+              setLoading={setLoading}
+              Columns={Columns}
+              items={dataTable}
+              setIsSelected={setIsSelected}
+              totalPages={pageCount}
+              total={dataTable.length}
+              setPages={meta?.page}
+            />
+          </div>
         </main>
       </Layouts>
 
@@ -541,8 +528,7 @@ export default function Index(props) {
             </div>
           ) : (
             <span className="italic font-bold text-sm text-gray-500">
-              {" "}
-              No admin selected{" "}
+              No admin selected
             </span>
           )}
 
@@ -586,8 +572,7 @@ export default function Index(props) {
                 <div className="flex flex-row items-center gap-2 w-full justify-center">
                   <BiLoaderAlt className="h-5 w-5 animate-spin-slow" />
                   <span className="text-white font-semibold text-sm">
-                    {" "}
-                    Proccessing{" "}
+                    Proccessing
                   </span>
                 </div>
               ) : (
@@ -643,8 +628,7 @@ export default function Index(props) {
           <div className="w-full mb-5 flex flex-col gap-1">
             <label className="font-bold text-base"> Creation Date </label>
             <span className="text-gray-500 text-base font-semibold">
-              {" "}
-              {dateToString(isForm?.created_at)}{" "}
+              {dateToString(isForm?.created_at)}
             </span>
           </div>
 
@@ -665,8 +649,7 @@ export default function Index(props) {
             ) : (
               <>
                 <span className="text-gray-500 italic w-full text-center text-sm font-bold">
-                  {" "}
-                  No members found{" "}
+                  No members found
                 </span>
               </>
             )}
@@ -699,8 +682,8 @@ export default function Index(props) {
               <span> {isForm?.gallery} </span>
             ) : (
               <span className="italic text-gray-500 font-bold text-sm text-center">
-                {" "}
-                No photos found{" "}
+                
+                No photos found
               </span>
             )}
           </div> */}
@@ -710,11 +693,18 @@ export default function Index(props) {
               variant="danger"
               className="w-1/2 flex justify-center items-center"
               onClick={onDelete}
+              disabled={loadingDelete}
             >
-              <span className="text-base capitalize w-full">
-                {" "}
-                Delete Group{" "}
-              </span>
+              {loadingDelete ? (
+                <div className="flex flex-row items-center gap-2 w-full justify-center">
+                  <BiLoaderAlt className="h-5 w-5 animate-spin-slow" />
+                  <span className=" font-semibold text-sm">Proccessing</span>
+                </div>
+              ) : (
+                <span className="text-base capitalize w-full">
+                  Delete Group
+                </span>
+              )}
             </Button>
             <Button
               variant="primary"

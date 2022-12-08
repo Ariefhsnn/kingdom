@@ -22,8 +22,6 @@ export default function Index(props) {
   let { token, userId } = props;
   const [sidebar, setSidebar] = useState(false);
 
-  const [videoData, setVideoData] = useState([]);
-
   const [dataTable, setDataTable] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pageCount, setPageCount] = useState(1);
@@ -43,6 +41,7 @@ export default function Index(props) {
   const [oldData, setOldData] = useState([]);
   const [initialType, setInitialType] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [loadingDelete, setLoadingDelete] = useState(false);
   const config = {
     headers: {
       "Content-Type": "multipart/form-data",
@@ -82,10 +81,12 @@ export default function Index(props) {
         .get("v1/discover")
         .then(function (response) {
           setDiscoverType(response?.data?.data);
+          setLoading(false);
         })
         .catch((err) => {
           toastify(err?.response?.data?.message, "error");
           setDataTable([]);
+          setLoading(false);
         });
     } catch (error) {
       console.log(error);
@@ -93,6 +94,7 @@ export default function Index(props) {
   };
 
   const getDiscoverContent = async () => {
+    setLoading(true);
     if (tab) {
       config = {
         ...config,
@@ -216,15 +218,17 @@ export default function Index(props) {
     },
   ];
 
-  const videoForm = () => {
+  const videoForm = (isEdit) => {
     return (
       <div className="w-full flex flex-col mb-5">
         <label className="font-bold text-base"> Video Link </label>
         <input
           type="text"
           className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
-          value={isForm?.link || ""}
-          onChange={(e) => setIsForm({ ...isForm, link: e?.target?.value })}
+          value={isForm?.video_link || ""}
+          onChange={(e) =>
+            setIsForm({ ...isForm, video_link: e?.target?.value })
+          }
         />
       </div>
     );
@@ -291,7 +295,7 @@ export default function Index(props) {
       items.append("photos", fileSelected[0]);
       items.append("description", "desc");
     } else if (contentType[0]?.type == "VIDEO") {
-      items.append("video_link", isForm?.link);
+      items.append("video_link", isForm?.video_link);
       items.append("description", "desc");
     } else {
       items.append("photos", fileSelected[0]);
@@ -323,7 +327,7 @@ export default function Index(props) {
       items.append("new_photos", fileSelected[0]);
       items.append("description", "desc");
     } else if (contentType[0]?.type == "VIDEO") {
-      items.append("video_link", isForm?.link);
+      items.append("video_link", isForm?.video_link);
       items.append("description", "desc");
     } else {
       items.append("new_photos", fileSelected[0]);
@@ -349,26 +353,22 @@ export default function Index(props) {
   };
 
   const onDelete = async () => {
-    await setLoading(true);
-    try {
-      const res = await axios.delete(
-        `v1/discover-content/${isForm?.id}`,
-        config
-      );
-      let { data, status } = res;
-      if (status == 204 || status == 200) {
-        await toastify(data?.message, "success");
-        await getDiscover();
-        await getDiscoverContent();
-        await setLoading(false);
-        await closeModalEdit();
-      } else {
-        throw data;
-      }
-    } catch (error) {
-      // let { data, status } = await error?.response;
-      // toastify(data?.message, "error");
-    }
+    await setLoadingDelete(true);
+
+    await axios
+      .delete(`v1/discover-content/${isForm?.id}`, config)
+      .then((res) => {
+        toastify(res?.data?.message, "success");
+        getDiscover();
+        getDiscoverContent();
+        setLoadingDelete(false);
+        closeModalEdit();
+      })
+      .catch((err) => {
+        toastify(err?.message, "error");
+
+        setLoadingDelete(false);
+      });
   };
 
   const filteredItem = useMemo(() => {
@@ -401,7 +401,7 @@ export default function Index(props) {
             Discover / Upload
           </span>
           <span className="text-lg font-semibold"> Create </span>
-          <div className="w-40 my-5">
+          <div className="w-full md:w-40 my-5">
             <Button
               variant="outlineGreen"
               onClick={openModalAdd}
@@ -414,8 +414,8 @@ export default function Index(props) {
             Content ({dataTable?.length})
           </span>
           <TaskTab options={menus} value={tab} setValue={setTab}>
-            <div className="md:ml-10 w-full md:w-[50%] flex justify-between items-center">
-              <div className="w-60">
+            <div className="md:ml-10 w-full md:w-[50%] flex justify-between items-center flex-col md:flex-row">
+              <div className="w-full md:w-60">
                 <GlobalFilter
                   preFilteredRows={dataTable}
                   filter={isSearch}
@@ -426,59 +426,18 @@ export default function Index(props) {
               </div>
             </div>
           </TaskTab>
-          {tab == "Image" ? (
-            <div className="w-full">
-              <Table
-                loading={loading}
-                setLoading={setLoading}
-                Columns={Columns}
-                items={filteredItem}
-                // setIsSelected={setIsSelected}
-                // totalPages={pageCount}
-                // total={total}
-                // setPages={pageCount}
-              />
-            </div>
-          ) : tab == "Video" ? (
-            <div className="w-full">
-              <Table
-                loading={loading}
-                setLoading={setLoading}
-                Columns={Columns}
-                items={filteredItem}
-                setIsSelected={setIsSelected}
-                totalPages={pageCount}
-                total={total}
-                setPages={pageCount}
-              />
-            </div>
-          ) : tab == "Business opportunities" ? (
-            <div className="w-full">
-              <Table
-                loading={loading}
-                setLoading={setLoading}
-                Columns={Columns}
-                items={filteredItem}
-                setIsSelected={setIsSelected}
-                totalPages={pageCount}
-                total={total}
-                setPages={pageCount}
-              />
-            </div>
-          ) : (
-            <div className="w-full">
-              <Table
-                loading={loading}
-                setLoading={setLoading}
-                Columns={Columns}
-                items={filteredItem}
-                setIsSelected={setIsSelected}
-                totalPages={pageCount}
-                total={total}
-                setPages={pageCount}
-              />
-            </div>
-          )}
+          <div className="w-full">
+            <Table
+              loading={loading}
+              setLoading={setLoading}
+              Columns={Columns}
+              items={filteredItem}
+              setIsSelected={setIsSelected}
+              totalPages={pageCount}
+              total={dataTable.length}
+              setPages={pageCount}
+            />
+          </div>
         </main>
       </Layouts>
 
@@ -648,7 +607,7 @@ export default function Index(props) {
               {contentType[0]?.type == "IMAGE"
                 ? imageForm(true)
                 : contentType[0]?.type == "VIDEO"
-                ? videoForm()
+                ? videoForm(true)
                 : contentType[0]?.type == "ARTICLE" ||
                   contentType[0]?.type == "NEWS"
                 ? otherForm(true)
@@ -661,15 +620,31 @@ export default function Index(props) {
               variant="danger"
               className="w-1/2 flex justify-center items-center"
               onClick={onDelete}
+              disabled={loadingDelete}
             >
-              <span className="text-base capitalize w-full">Delete</span>
+              {loadingDelete ? (
+                <div className="flex flex-row items-center gap-2 w-full justify-center">
+                  <BiLoaderAlt className="h-5 w-5 animate-spin-slow" />
+                  <span className=" font-semibold text-sm"> Proccessing </span>
+                </div>
+              ) : (
+                <span className="text-base capitalize w-full">Delete</span>
+              )}
             </Button>
             <Button
               variant="primary"
               className="w-1/2 flex justify-center items-center"
               onClick={onUpdate}
+              disabled={loading}
             >
-              <span className="text-base capitalize w-full "> Save </span>
+              {loading ? (
+                <div className="flex flex-row items-center gap-2 w-full justify-center">
+                  <BiLoaderAlt className="h-5 w-5 animate-spin-slow" />
+                  <span className=" font-semibold text-sm"> Proccessing </span>
+                </div>
+              ) : (
+                <span className="text-base capitalize w-full "> Save </span>
+              )}
             </Button>
           </div>
         </div>

@@ -3,7 +3,16 @@ import React, { useEffect, useState } from "react";
 import Select from "react-select";
 
 export default function DefaultSelect(props) {
-  const { value, setValue, options, placeholder, isValueOnly, isMulti } = props;
+  const {
+    value,
+    setValue,
+    options,
+    placeholder,
+    isValueOnly,
+    setData,
+    isMulti,
+    instanceId,
+  } = props;
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
@@ -17,12 +26,14 @@ export default function DefaultSelect(props) {
   }, [value]);
 
   const onChange = (e) => {
-    if (isValueOnly) {
-      setSelected(e);
+    if (setData) {
+      setData(e);
+
       setValue(e?.value || e);
+      setSelected(e?.value);
     } else {
-      setSelected(e);
-      setValue(e);
+      setSelected(e?.value);
+      setValue(e?.value || e);
     }
   };
 
@@ -34,7 +45,8 @@ export default function DefaultSelect(props) {
       isMulti={isMulti}
       options={options}
       styles={{ padding: 20 }}
-      defaultValue={value}
+      defaultValue={value || selected}
+      instanceId={instanceId || "id"}
     />
   );
 }

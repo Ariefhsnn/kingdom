@@ -43,7 +43,6 @@ const Table = ({ items, Columns, loading, setLoading, totalPages, total }) => {
     [Columns, loading]
   );
 
-  // console.log(loading, 'loading')
   const {
     getTableProps,
     getTableBodyProps,
@@ -184,7 +183,11 @@ const Table = ({ items, Columns, loading, setLoading, totalPages, total }) => {
             {headerGroups.map((headerGroup, idx) => (
               <tr {...headerGroup.getHeaderGroupProps()} key={idx}>
                 {headerGroup.headers.map((column, i) => (
-                  <th {...column.getHeaderProps()} className="px-4 py-6" key={i}>
+                  <th
+                    {...column.getHeaderProps()}
+                    className="px-4 py-6"
+                    key={i}
+                  >
                     {column.render("Header")}
                     {/* {column.canFilter ? <div>{column.render('Filter')}</div> : null} */}
                   </th>
@@ -228,10 +231,6 @@ const Table = ({ items, Columns, loading, setLoading, totalPages, total }) => {
                   <div className="flex flex-row items-center text-xs">
                     {page.length >= 1 ? (
                       <>
-                        <div className="mr-10 font-bold text-gray-500">
-                          {/* Menampilkan <strong>{page.length}</strong> dari <strong>{items.length}</strong> */}
-                          Rows per page
-                        </div>
                         <select
                           className="focus:outline-none bg-transparent text-gray-500"
                           value={query?.limit}

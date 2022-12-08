@@ -116,7 +116,7 @@ const Index = (props) => {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement("a");
         link.href = url;
-        link.setAttribute("download", `User-${date}.xlsx`);
+        link.setAttribute("download", `User-${date}.csv`);
         document.body.appendChild(link);
         link.click();
         setLoadingExport(false);
@@ -226,7 +226,7 @@ const Index = (props) => {
                 className="flex justify-center"
                 onClick={onExport}
               >
-                Export as .xlsx
+                export as .csv
               </Button>
             </div>
           </div>
