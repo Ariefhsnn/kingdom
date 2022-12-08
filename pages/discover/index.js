@@ -30,6 +30,7 @@ const Index = (props) => {
   const [val, setVal] = useState([]);
   const [radioValue, setRadioValue] = useState("");
   const [isForm, setIsForm] = useState({});
+  const [loadingExport, setLoadingExport] = useState(false);
   const config = {
     headers: {
       "Content-Type": "application/json",
@@ -223,6 +224,34 @@ const Index = (props) => {
       });
   };
 
+  const onExport = async () => {
+    let date = new Date();
+    await setLoadingExport(true);
+    await axios({
+      url: "v1/export/discover",
+      method: "POST",
+      data: {},
+      responseType: "blob",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => {
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `Discover-${date}.xlsx`);
+        document.body.appendChild(link);
+        link.click();
+        setLoadingExport(false);
+      })
+      .catch((err) => {
+        toastify(err?.message, "error");
+        setLoadingExport(false);
+      });
+  };
+
   return (
     <>
       <Navbar sidebar={sidebar} setSidebar={setSidebar} />
@@ -247,8 +276,7 @@ const Index = (props) => {
             </Button>
           </div>
           <span className="text-lg font-semibold">
-            {" "}
-            Tabs ({dataTable?.length}){" "}
+            Tabs ({dataTable?.length})
           </span>
           <TaskTab options={Menus} value={tab} setValue={setTab}>
             <div className="md:ml-10 w-full md:w-[80%] flex justify-between items-center">
@@ -262,8 +290,23 @@ const Index = (props) => {
                 />
               </div>
               <div className="w-40">
-                <Button variant="outlineBlue" className="flex justify-center">
-                  Export as .xlsx
+                <Button
+                  variant="outlineBlue"
+                  className="flex justify-center"
+                  onClick={onExport}
+                  disabled={loadingExport}
+                >
+                  {loadingExport ? (
+                    <div className="flex flex-row items-center gap-2 w-full justify-center">
+                      <BiLoaderAlt className="h-5 w-5 animate-spin-slow" />
+                      <span className="font-semibold text-sm">Proccessing</span>
+                    </div>
+                  ) : (
+                    <span className="text-base capitalize w-full ">
+                      {" "}
+                      Export as .xlsx{" "}
+                    </span>
+                  )}
                 </Button>
               </div>
             </div>
@@ -372,8 +415,7 @@ const Index = (props) => {
                 <div className="flex flex-row items-center gap-2 w-full justify-center">
                   <BiLoaderAlt className="h-5 w-5 animate-spin-slow" />
                   <span className="text-white font-semibold text-sm">
-                    {" "}
-                    Proccessing{" "}
+                    Proccessing
                   </span>
                 </div>
               ) : (
@@ -467,8 +509,7 @@ const Index = (props) => {
           <div className="w-full mb-5 flex flex-col gap-1">
             <label className="font-bold text-base"> Content Count </label>
             <span className="text-gray-500 text-base font-semibold">
-              {" "}
-              {isForm?.contents?.length}{" "}
+              {isForm?.contents?.length}
             </span>
           </div>
 
@@ -490,8 +531,7 @@ const Index = (props) => {
                 <div className="flex flex-row items-center gap-2 w-full justify-center">
                   <BiLoaderAlt className="h-5 w-5 animate-spin-slow" />
                   <span className="text-white font-semibold text-sm">
-                    {" "}
-                    Proccessing{" "}
+                    Proccessing
                   </span>
                 </div>
               ) : (

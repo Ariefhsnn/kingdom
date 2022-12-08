@@ -42,6 +42,7 @@ export default function Index(props) {
   const [contentType, setContentType] = useState(null);
   const [oldData, setOldData] = useState([]);
   const [initialType, setInitialType] = useState(null);
+  const [preview, setPreview] = useState(null);
   const config = {
     headers: {
       "Content-Type": "multipart/form-data",
@@ -64,7 +65,7 @@ export default function Index(props) {
     setIsForm(items);
     setIsShowEdit(true);
     setRadioValue(items?.discover_id);
-    console.log("data", items?.discover_id);
+    setPreview(items?.photos[0]?.file_url);
   };
 
   const closeModalEdit = () => {
@@ -162,44 +163,6 @@ export default function Index(props) {
     }
   }, [radioValue]);
 
-  // useEffect(() => {
-  //   if (imgData?.length > 0) imgData.forEach((e) => (e["type"] = "image"));
-  //   if (videoData?.length > 0) videoData.forEach((e) => (e["type"] = "video"));
-  //   if (boData?.length > 0) boData.forEach((e) => (e["type"] = "business"));
-  //   if (newsData?.length > 0) newsData.forEach((e) => (e["type"] = "news"));
-  // }, [imgData, videoData, boData, newsData]);
-
-  // useEffect(() => {
-  //   if (items?.length > 0) {
-  //     setImgData(items.filter((e) => e?.type == "image"));
-  //     setVideoData(items.filter((e) => e?.type == "video"));
-  //     setBoData(items.filter((e) => e?.type == "business"));
-  //     setNewsData(items.filter((e) => e?.type == "news"));
-  //   } else {
-  //     setImgData([]);
-  //     setBoData([]);
-  //     setVideoData([]);
-  //     setNewsData([]);
-  //   }
-  // }, [items]);
-
-  // useEffect(() => {
-  //   if (
-  //     imgData.length > 0 ||
-  //     videoData?.length > 0 ||
-  //     boData?.length > 0 ||
-  //     newsData?.length > 0
-  //   ) {
-  //     tab == "Image"
-  //       ? setTotal(imgData?.length)
-  //       : tab == "Video"
-  //       ? setTotal(videoData.length)
-  //       : tab == "Business opportunities"
-  //       ? setTotal(boData.length)
-  //       : setTotal(newsData.length);
-  //   }
-  // }, [tab, imgData, boData, newsData, videoData]);
-
   const Columns = [
     {
       Header: "Title",
@@ -253,14 +216,6 @@ export default function Index(props) {
     },
   ];
 
-  useEffect(() => {
-    console.log(12, fileSelected);
-  }, [fileSelected]);
-
-  useEffect(() => {
-    console.log(val);
-  }, [val]);
-
   const videoForm = () => {
     return (
       <div className="w-full flex flex-col mb-5">
@@ -279,7 +234,15 @@ export default function Index(props) {
     return (
       <div className="w-full flex flex-col mb-5">
         <label className="font-bold text-base"> Upload image </label>
-        <UploaderBox files={fileSelected} setFiles={setFileSelected} />
+        {isEdit ? (
+          <UploaderBox
+            files={fileSelected}
+            setFiles={setFileSelected}
+            preview={preview}
+          />
+        ) : (
+          <UploaderBox files={fileSelected} setFiles={setFileSelected} />
+        )}
         {isForm?.media_url?.length > 0 ? (
           <div className="w-full bg-gray-50 py-2 px-5 rounded-md items-center flex justify-between mt-5">
             <img src={isForm?.media_url} className="h-[60px] w-[60px]" />
@@ -287,11 +250,7 @@ export default function Index(props) {
               <MdDeleteOutline className="w-8 h-8 text-gray-500" />
             </div>
           </div>
-        ) : (
-          <span className="my-3 text-center font-bold italic text-sm">
-            {isEdit ? "No image found" : null}
-          </span>
-        )}
+        ) : null}
       </div>
     );
   };
@@ -361,13 +320,13 @@ export default function Index(props) {
     await setLoading(true);
     let items = new FormData();
     if (contentType[0]?.type == "IMAGE") {
-      items.append("photos", fileSelected[0], `${fileSelected[0].path}`);
+      items.append("new_photos", fileSelected[0]);
       items.append("description", "desc");
     } else if (contentType[0]?.type == "VIDEO") {
       items.append("video_link", isForm?.link);
       items.append("description", "desc");
     } else {
-      items.append("photos", fileSelected[0], `${fileSelected[0].path}`);
+      items.append("new_photos", fileSelected[0]);
       items.append("description", isForm?.content);
     }
     items.append("title", isForm?.title);
@@ -687,12 +646,12 @@ export default function Index(props) {
           {contentType && (
             <div className="w-full">
               {contentType[0]?.type == "IMAGE"
-                ? imageForm(false)
+                ? imageForm(true)
                 : contentType[0]?.type == "VIDEO"
                 ? videoForm()
                 : contentType[0]?.type == "ARTICLE" ||
                   contentType[0]?.type == "NEWS"
-                ? otherForm(false)
+                ? otherForm(true)
                 : null}
             </div>
           )}

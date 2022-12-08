@@ -44,6 +44,7 @@ export default function Index(props) {
   const [meta, setMeta] = useState(null);
   const [disabledBtn, setDisabledBtn] = useState(false);
   const [removed, setRemoved] = useState(null);
+  const [loadingExport, setLoadingExport] = useState(false);
 
   const config = {
     headers: {
@@ -240,6 +241,34 @@ export default function Index(props) {
       });
   };
 
+  const onExport = async () => {
+    let date = new Date();
+    await setLoadingExport(true);
+    await axios({
+      url: "v1/export/group",
+      method: "POST",
+      data: {},
+      responseType: "blob",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => {
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `Group-${date}.xlsx`);
+        document.body.appendChild(link);
+        link.click();
+        setLoadingExport(false);
+      })
+      .catch((err) => {
+        toastify(err?.message, "error");
+        setLoadingExport(false);
+      });
+  };
+
   useEffect(() => {
     if (dataTable?.length > 0) {
       setTotal(dataTable?.length);
@@ -410,9 +439,22 @@ export default function Index(props) {
                 <Button
                   variant="outlineBlue"
                   className="flex justify-center"
-                  onClick={openToast}
+                  onClick={onExport}
+                  disabled={loadingExport}
                 >
-                  Export as .xlsx
+                  {loadingExport ? (
+                    <div className="flex flex-row items-center gap-2 w-full justify-center">
+                      <BiLoaderAlt className="h-5 w-5 animate-spin-slow" />
+                      <span className=" font-semibold text-sm">
+                        Proccessing
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-base capitalize w-full ">
+                      {" "}
+                      Export as .xlsx{" "}
+                    </span>
+                  )}
                 </Button>
               </div>
             </div>

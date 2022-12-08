@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 
 import { AiOutlineEdit } from "react-icons/ai";
+import { BiLoaderAlt } from "react-icons/bi";
 import Button from "../../../components/button";
 import DefaultSelect from "../../../components/select";
 import { GlobalFilter } from "../../../components/table/components/GlobalFilter";
 import Layouts from "../../../components/Layouts";
-import { MdEdit } from "react-icons/md";
 import Modal from "../../../components/modal/Modal";
 import Navbar from "../../../components/navbar";
 import Table from "../../../components/table";
@@ -14,8 +14,6 @@ import UploaderBox from "../../../components/button/UploaderBox";
 import axios from "axios";
 import { getCookie } from "../../../utils/cookie";
 import { toastify } from "../../../utils/useFunction";
-
-// import items from "../../../utils/json/directoryUpload.json";
 
 const Index = (props) => {
   let { token, userId } = props;
@@ -33,10 +31,10 @@ const Index = (props) => {
   const [isShowEdit, setIsShowEdit] = useState(false);
   const [isForm, setIsForm] = useState({});
   const [churchesData, setChurchesData] = useState([]);
-  const [associatesData, setAssociatesData] = useState([]);
-  const [chambersData, setChambersData] = useState([]);
   const [radioValue, setRadioValue] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
+  const [loadingExport, setLoadingExport] = useState(false);
+  const [options, setOptions] = useState([]);
 
   const config = {
     headers: {
@@ -86,38 +84,39 @@ const Index = (props) => {
     setRadioValue("");
   };
 
-  useEffect(() => {
-    if (dataTable?.length > 0) {
-      setChurchesData(dataTable.filter((e) => e?.category == " church"));
-      setAssociatesData(dataTable.filter((e) => e?.category == "associate"));
-      setChambersData(dataTable.filter((e) => e?.category == "chamber"));
-    } else {
-      setDataTable([]);
-    }
-  }, [dataTable]);
+  const getDirectoryCategory = async () => {
+    let category;
+    let categories = [];
+    await axios
+      .get("v1/directory-category", config)
+      .then((res) => res.data)
+      .then((data) => {
+        category = data.data;
+      })
+      .catch((err) => console.log(err, "error"));
+
+    await category.forEach((element) => {
+      categories.push({
+        ...element,
+        label: element?.name,
+        value: element?.name,
+      });
+    });
+
+    setOptions(categories);
+    if (categories.length > 0) setVal(categories[0].value);
+  };
 
   useEffect(() => {
-    if (dataTable?.length > 0) {
-      let filterAssociates = dataTable.filter(
-        (e) => e?.category == "associates"
-      )?.length;
-      let filterChambers = dataTable.filter(
-        (e) => e?.category == "chambers"
-      )?.length;
-      tab == "Churches"
-        ? setTotal(churchesData.length)
-        : tab == "Associates"
-        ? setTotal(filterAssociates)
-        : setTotal(filterChambers);
-    }
-  }, [dataTable, tab]);
+    getDirectoryCategory();
+  }, []);
 
   const getDirectory = async () => {
     if (tab) {
       config = {
         ...config,
         params: {
-          category: tab,
+          category: val,
         },
       };
     }
@@ -153,7 +152,7 @@ const Index = (props) => {
 
   useEffect(() => {
     getDirectory();
-  }, [tab]);
+  }, [val]);
 
   const Columns = [
     {
@@ -197,22 +196,6 @@ const Index = (props) => {
       },
     },
   ];
-
-  const handleFileChange = (e) => {
-    setFileSelected(e);
-  };
-
-  useEffect(() => {
-    console.log(12, fileSelected);
-  }, [fileSelected]);
-
-  const onSelectUser = (e) => {
-    setVal([{ ...val, name: e?.groupName, id: e?.id }]);
-  };
-
-  useEffect(() => {
-    console.log(val);
-  }, [val]);
 
   const onCreate = async () => {
     let date = new Date(selectedTime).getTime();
@@ -289,6 +272,34 @@ const Index = (props) => {
     }
   };
 
+  const onExport = async () => {
+    let date = new Date();
+    await setLoadingExport(true);
+    await axios({
+      url: "v1/export/directory",
+      method: "POST",
+      data: {},
+      responseType: "blob",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => {
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `Directory-Content-${date}.xlsx`);
+        document.body.appendChild(link);
+        link.click();
+        setLoadingExport(false);
+      })
+      .catch((err) => {
+        toastify(err?.message, "error");
+        setLoadingExport(false);
+      });
+  };
+
   return (
     <>
       <Navbar sidebar={sidebar} setSidebar={setSidebar} />
@@ -316,9 +327,18 @@ const Index = (props) => {
             {" "}
             Category ({dataTable?.length}){" "}
           </span>
-          <TaskTab options={Menus} value={tab} setValue={setTab}>
-            <div className="md:ml-10 w-full md:w-[70%] flex justify-between items-center">
-              <div className="w-60">
+          <div className="w-full flex flex-col md:flex-row gap-2">
+            <div className="w-full md:w-[30%] ">
+              <DefaultSelect
+                value={val}
+                setValue={setVal}
+                options={options}
+                isMulti={false}
+                isValueOnly={true}
+              />
+            </div>
+            <div className="md:ml-10 w-full md:w-[70%] flex justify-between items-center flex-col md:flex-row gap-2">
+              <div className="w-full md:w-60">
                 <GlobalFilter
                   preFilteredRows={tab == "Churches" ? dataTable : null}
                   filter={isSearch}
@@ -327,13 +347,28 @@ const Index = (props) => {
                   setLoading={setLoading}
                 />
               </div>
-              <div className="w-40">
-                <Button variant="outlineBlue" className="flex justify-center">
-                  Export as .xlsx
+              <div className="w-full md:w-40">
+                <Button
+                  variant="outlineBlue"
+                  className="flex justify-center"
+                  onClick={onExport}
+                  disabled={loadingExport}
+                >
+                  {loadingExport ? (
+                    <div className="flex flex-row items-center gap-2 w-full justify-center">
+                      <BiLoaderAlt className="h-5 w-5 animate-spin-slow" />
+                      <span className="font-semibold text-sm">Proccessing</span>
+                    </div>
+                  ) : (
+                    <span className="text-base capitalize w-full ">
+                      Export as .xlsx
+                    </span>
+                  )}
                 </Button>
               </div>
             </div>
-          </TaskTab>
+          </div>
+
           {tab == "Churches" ? (
             <div className="w-full">
               <Table
@@ -554,8 +589,16 @@ const Index = (props) => {
               variant="primary"
               className="w-1/2 flex justify-center items-center"
               onClick={onCreate}
+              disabled={loading}
             >
-              <span className="text-base capitalize w-full "> Upload </span>
+              {loading ? (
+                <div className="flex flex-row items-center gap-2 w-full justify-center">
+                  <BiLoaderAlt className="h-5 w-5 animate-spin-slow" />
+                  <span className="font-semibold text-sm">Proccessing</span>
+                </div>
+              ) : (
+                <span className="text-base capitalize w-full ">Upload</span>
+              )}
             </Button>
           </div>
         </div>

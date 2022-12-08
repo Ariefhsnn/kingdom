@@ -100,15 +100,29 @@ const Index = (props) => {
   };
 
   const onExport = async () => {
+    let date = new Date();
     await setLoadingExport(true);
-    await axios
-      .post(`v1/user/export-to-csv`)
-      .then((res) => {
-        console.log(res);
+    await axios({
+      url: "v1/export/user",
+      method: "POST",
+      data: {},
+      responseType: "blob",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => {
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `User-${date}.xlsx`);
+        document.body.appendChild(link);
+        link.click();
         setLoadingExport(false);
       })
       .catch((err) => {
-        console.log(err, "error");
+        toastify(err?.message, "error");
         setLoadingExport(false);
       });
   };

@@ -33,6 +33,7 @@ const Index = (props) => {
   const [isShowEdit, setIsShowEdit] = useState(false);
   const [isForm, setIsForm] = useState({});
   const [meta, setMeta] = useState(null);
+  const [loadingExport, setLoadingExport] = useState(false);
   const config = {
     headers: {
       "Content-Type": "multipart/form-data",
@@ -102,18 +103,6 @@ const Index = (props) => {
       },
     },
   ];
-
-  const handleFileChange = (e) => {
-    setFileSelected(e);
-  };
-
-  useEffect(() => {
-    console.log(12, fileSelected);
-  }, [fileSelected]);
-
-  const onSelectUser = (e) => {
-    setVal([{ ...val, name: e?.groupName, id: e?.id }]);
-  };
 
   const getDirectory = async () => {
     if (isSearch) {
@@ -189,6 +178,34 @@ const Index = (props) => {
       });
   };
 
+  const onExport = async () => {
+    let date = new Date();
+    await setLoadingExport(true);
+    await axios({
+      url: "v1/export/directory-category",
+      method: "POST",
+      data: {},
+      responseType: "blob",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => {
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `Directory-${date}.xlsx`);
+        document.body.appendChild(link);
+        link.click();
+        setLoadingExport(false);
+      })
+      .catch((err) => {
+        toastify(err?.message, "error");
+        setLoadingExport(false);
+      });
+  };
+
   return (
     <>
       <Navbar sidebar={sidebar} setSidebar={setSidebar} />
@@ -227,8 +244,23 @@ const Index = (props) => {
                 />
               </div>
               <div className="w-40">
-                <Button variant="outlineBlue" className="flex justify-center">
-                  Export as .xlsx
+                <Button
+                  variant="outlineBlue"
+                  className="flex justify-center"
+                  onClick={onExport}
+                  disabled={loadingExport}
+                >
+                  {loadingExport ? (
+                    <div className="flex flex-row items-center gap-2 w-full justify-center">
+                      <BiLoaderAlt className="h-5 w-5 animate-spin-slow" />
+                      <span className="font-semibold text-sm">Proccessing</span>
+                    </div>
+                  ) : (
+                    <span className="text-base capitalize w-full ">
+                      {" "}
+                      Export as .xlsx{" "}
+                    </span>
+                  )}
                 </Button>
               </div>
             </div>
