@@ -176,8 +176,8 @@ const Index = (props) => {
       accessor: "email",
     },
     {
-      Header: "Phone Number",
-      Footer: "Phone Number",
+      Header: "Phone",
+      Footer: "Phone",
       accessor: "mobile_phone",
     },
     {

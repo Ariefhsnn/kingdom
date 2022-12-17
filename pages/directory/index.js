@@ -77,10 +77,8 @@ const Index = (props) => {
     {
       Header: "Content Count",
       Footer: "Content Count",
-      accessor: "contentCount",
-      Cell: ({ value }) => {
-        return <span>{value ? value : "-"}</span>;
-      },
+      accessor: "directories",
+      Cell: ({ value }) => value.length,
     },
     {
       Header: "Creation date",
@@ -226,7 +224,7 @@ const Index = (props) => {
       >
         <main className="container w-full flex flex-col text-primary-500 px-5 md:px-0">
           <span className="tracking-wider text-2xl font-bold mb-10">
-            Directory / Create
+            Directory / Create Category
           </span>
           <span className="text-lg font-semibold"> Create </span>
           <div className="w-full md:w-40 my-5">
