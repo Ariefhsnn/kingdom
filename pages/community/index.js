@@ -246,7 +246,16 @@ export default function Index(props) {
   };
 
   const onExport = async () => {
-    let date = new Date();
+    let today = new Date();
+    const yyyy = today.getFullYear();
+    let mm = today.getMonth() + 1; // Months start at 0!
+    let dd = today.getDate();
+
+    if (dd < 10) dd = '0' + dd;
+    if (mm < 10) mm = '0' + mm;
+
+    const formattedToday = yyyy + '' + mm + '' + dd
+
     await setLoadingExport(true);
     await axios({
       url: "v1/export/group",
@@ -262,7 +271,7 @@ export default function Index(props) {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement("a");
         link.href = url;
-        link.setAttribute("download", `Group-${date}.csv`);
+        link.setAttribute("download", `export-group-${formattedToday}.csv`);
         document.body.appendChild(link);
         link.click();
         setLoadingExport(false);
@@ -453,8 +462,8 @@ export default function Index(props) {
                       </span>
                     </div>
                   ) : (
-                    <span className="text-base capitalize w-full ">
-                      Export as .csv
+                    <span className="text-base w-full ">
+                        Export as  CSV
                     </span>
                   )}
                 </Button>

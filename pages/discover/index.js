@@ -225,7 +225,16 @@ const Index = (props) => {
   };
 
   const onExport = async () => {
-    let date = new Date();
+    let today = new Date();
+    const yyyy = today.getFullYear();
+    let mm = today.getMonth() + 1; // Months start at 0!
+    let dd = today.getDate();
+
+    if (dd < 10) dd = '0' + dd;
+    if (mm < 10) mm = '0' + mm;
+
+    const formattedToday = yyyy + '' + mm + '' + dd
+
     await setLoadingExport(true);
     await axios({
       url: "v1/export/discover",
@@ -241,7 +250,7 @@ const Index = (props) => {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement("a");
         link.href = url;
-        link.setAttribute("download", `Discover-${date}.csv`);
+        link.setAttribute("download", `export-discover-${formattedToday}.csv`);
         document.body.appendChild(link);
         link.click();
         setLoadingExport(false);
@@ -302,9 +311,8 @@ const Index = (props) => {
                       <span className="font-semibold text-sm">Proccessing</span>
                     </div>
                   ) : (
-                    <span className="text-base capitalize w-full ">
-                      {" "}
-                      export as .csv{" "}
+                    <span className="text-base w-full ">
+                        Export as CSV
                     </span>
                   )}
                 </Button>
