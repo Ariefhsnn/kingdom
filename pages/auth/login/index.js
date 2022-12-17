@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getCookie, setCookie } from "../../../utils/cookie";
-
+import Link from 'next/link'
 import { BiLoaderAlt } from "react-icons/bi";
 import Button from "../../../components/button";
 import Head from "next/head";
@@ -60,7 +60,7 @@ export default function Login() {
       <div className="bg-gray-50 w-full h-screen p-5">
         <div className="w-full lg:w-1/3 justify-center flex flex-col p-5 mx-auto my-3">
           <span className="text-xl flex justify-center text-gray-700 font-bold lg:text-2xl mb-5">
-            Kingdom Business App
+            Crossaway App
           </span>
 
           <Image
@@ -134,7 +134,8 @@ export default function Login() {
             </form>
           </div>
           <span className="mt-5 lg:mt-5 text-gray-700 font-semibold flex justify-center lg:text-2xl">
-            Powered by GB
+            Powered by &nbsp; 
+            <Link className="reference-url" href={"https://www.gbsoftware.asia/"}>GB Software </Link>
           </span>
         </div>
       </div>
