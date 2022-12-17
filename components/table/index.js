@@ -257,7 +257,7 @@ const Table = ({ items, Columns, loading, setLoading, totalPages, total }) => {
                       </>
                     ) : (
                       <div className="mr-10 text-sm">
-                        Search : data tidak ditemukan...
+                        Data not found
                       </div>
                     )}
                   </div>
