@@ -171,6 +171,16 @@ const Index = (props) => {
       accessor: "username",
     },
     {
+      Header: "Email",
+      Footer: "Email",
+      accessor: "email",
+    },
+    {
+      Header: "Phone Number",
+      Footer: "Phone Number",
+      accessor: "mobile_phone",
+    },
+    {
       Header: "User ID",
       Footer: "User ID",
       accessor: "id",
