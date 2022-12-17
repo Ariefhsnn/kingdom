@@ -11,7 +11,7 @@ const routes = [
         icon: "",
         query: {
           page: 1,
-          limit: 10,
+          limit: 50,
         },
       },
     ],
@@ -24,21 +24,21 @@ const routes = [
       {
         url: "/discover",
         path: "/discover",
-        name: "Create",
+        name: "Discover Tab",
         icon: "",
         query: {
           page: 1,
-          limit: 10,
+          limit: 50,
         },
       },
       {
         url: "/discover/upload",
         path: "/discover/upload",
-        name: "Upload",
+        name: "Discover Content",
         icon: "",
         query: {
           page: 1,
-          limit: 10,
+          limit: 50,
         },
       },
     ],
@@ -51,21 +51,21 @@ const routes = [
       {
         url: "/directory",
         path: "/directory",
-        name: "Create",
+        name: "Directory Category",
         icon: "",
         query: {
           page: 1,
-          limit: 10,
+          limit: 50,
         },
       },
       {
         url: "/directory/upload",
         path: "/directory/upload",
-        name: "Upload",
+        name: "Directory Content",
         icon: "",
         query: {
           page: 1,
-          limit: 10,
+          limit: 50,
         },
       },
     ],
@@ -77,7 +77,7 @@ const routes = [
     path: "/user",
     query: {
       page: 1,
-      limit: 10,
+      limit: 50,
     },
   },
 ];

@@ -78,7 +78,6 @@ export default function Index(props) {
     setIsForm(items);
     setIsShowEdit(true);
     setSelectedUser(items?.members);
-    console.log("items", items?.icon);
   };
 
   const closeModalEdit = () => {
@@ -127,7 +126,6 @@ export default function Index(props) {
     axios
       .get("v1/group", config)
       .then(function (response) {
-        console.log(response?.data?.data);
         setDataTable(response?.data?.data);
         setOldData(response?.data?.data);
         setMeta(response?.data?.meta);
@@ -137,12 +135,14 @@ export default function Index(props) {
         setDataTable([]);
         setOldData([]);
         setLoading(false);
-        toastify(err?.message, "error");
+        if(err.response.status !== 404){
+          toastify(err?.message, "error");
+        }
+        
       });
   };
 
   useEffect(() => {
-    console.log("meta", meta);
   }, [meta]);
 
   useEffect(() => {
@@ -155,7 +155,6 @@ export default function Index(props) {
   }, [tab]);
 
   useEffect(() => {
-    console.log(1, isForm);
   }, [isForm]);
 
   const onDelete = async () => {
@@ -175,7 +174,6 @@ export default function Index(props) {
       });
   };
 
-  console.log(fileSelected[0]?.File, "test");
 
   const onCreate = async () => {
     setLoading(true);
@@ -212,11 +210,14 @@ export default function Index(props) {
   };
 
   useEffect(() => {
-    console.log("selected", selectedUser);
+
   }, [selectedUser]);
 
   const onUpdate = async () => {
     await setLoading(true);
+
+    const deletedAdmins = removed === null ? [] : removed;
+
     let items = new FormData();
     let userItems = [];
     await selectedUser.forEach((e) =>
@@ -225,7 +226,7 @@ export default function Index(props) {
     await items.append("name", isForm?.name);
     await items.append("description", isForm?.description);
     await items.append("new_admins", JSON.stringify(userItems));
-    await items.append("deleted_admins", JSON.stringify(removed));
+    await items.append("deleted_admins", JSON.stringify(deletedAdmins));
     if (fileSelected.length > 0) {
       // await items.append("new_photos", fileSelected[0]);
       await items.append("new_icon", fileSelected[0]);
@@ -378,7 +379,6 @@ export default function Index(props) {
       setUserOpt([...userOpt, val]);
       setSelectedUser(filteredSelectedUser);
     } else {
-      console.log(selectedUser, "selected");
       let filteredSelectedUser = selectedUser.filter((e) => e?.id != val?.id);
       let removedUser = selectedUser.filter((e) => e?.id == val?.id);
       setUserOpt([...userOpt, val]);
@@ -408,7 +408,6 @@ export default function Index(props) {
     // }
   }, [isSearch]);
 
-  console.log(fileSelected, "selected");
 
   return (
     <>
