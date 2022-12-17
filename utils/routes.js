@@ -11,7 +11,7 @@ const routes = [
         icon: "",
         query: {
           page: 1,
-          limit: 10,
+          limit: 50,
         },
       },
     ],
@@ -28,7 +28,7 @@ const routes = [
         icon: "",
         query: {
           page: 1,
-          limit: 10,
+          limit: 50,
         },
       },
       {
@@ -38,7 +38,7 @@ const routes = [
         icon: "",
         query: {
           page: 1,
-          limit: 10,
+          limit: 50,
         },
       },
     ],
@@ -55,7 +55,7 @@ const routes = [
         icon: "",
         query: {
           page: 1,
-          limit: 10,
+          limit: 50,
         },
       },
       {
@@ -65,7 +65,7 @@ const routes = [
         icon: "",
         query: {
           page: 1,
-          limit: 10,
+          limit: 50,
         },
       },
     ],
@@ -77,7 +77,7 @@ const routes = [
     path: "/user",
     query: {
       page: 1,
-      limit: 10,
+      limit: 50,
     },
   },
 ];
