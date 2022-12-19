@@ -4,30 +4,29 @@ import { dateToString, toastify } from "../../../utils/useFunction";
 import { AiOutlineEdit } from "react-icons/ai";
 import { BiLoaderAlt } from "react-icons/bi";
 import Button from "../../../components/button";
+import DefaultSelect from "../../../components/select";
 import { GlobalFilter } from "../../../components/table/components/GlobalFilter";
 import Layouts from "../../../components/Layouts";
-import Link from "next/link";
 import { MdDeleteOutline } from "react-icons/md";
 import Modal from "../../../components/modal/Modal";
 import Navbar from "../../../components/navbar";
 import { RequestQueryBuilder } from "@nestjsx/crud-request";
 import Table from "../../../components/table";
-import TaskTab from "../../../components/button/TaskTab";
 import UploaderBox from "../../../components/button/UploaderBox";
 import axios from "axios";
 import { getCookie } from "../../../utils/cookie";
-import items from "../../../utils/json/discoverUploads.json";
+import { useRouter } from "next/router";
 
 export default function Index(props) {
   let { token, userId } = props;
   const [sidebar, setSidebar] = useState(false);
+  const router = useRouter();
 
   const [dataTable, setDataTable] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pageCount, setPageCount] = useState(1);
   const [total, setTotal] = useState(0);
   const [isSelected, setIsSelected] = useState("");
-  const [tab, setTab] = useState(null);
   const [isSearch, setIsSearch] = useState("");
   const [isShowAdd, setIsShowAdd] = useState(false);
   const [isShowEdit, setIsShowEdit] = useState(false);
@@ -39,9 +38,10 @@ export default function Index(props) {
   const [menus, setMenus] = useState(null);
   const [contentType, setContentType] = useState(null);
   const [oldData, setOldData] = useState([]);
-  const [initialType, setInitialType] = useState(null);
   const [preview, setPreview] = useState(null);
   const [loadingDelete, setLoadingDelete] = useState(false);
+  const [options, setOptions] = useState([]);
+  const [tabValue, setTabValue] = useState(null);
   const config = {
     headers: {
       "Content-Type": "multipart/form-data",
@@ -76,12 +76,17 @@ export default function Index(props) {
 
   const getDiscover = async () => {
     setLoading(true);
+    let temp = [];
     try {
       axios
         .get("v1/discover")
         .then(function (response) {
           setDiscoverType(response?.data?.data);
           setLoading(false);
+          response?.data?.data.forEach((e) => {
+            temp.push({ ...e, label: e?.name, value: e?.name });
+          });
+          setOptions(temp);
         })
         .catch((err) => {
           toastify(err?.response?.data?.message, "error");
@@ -95,46 +100,49 @@ export default function Index(props) {
 
   const getDiscoverContent = async () => {
     setLoading(true);
-    if (tab) {
+
+    if (isSearch) {
       config = {
         ...config,
-        params: {
-          content_type: tab.toUpperCase(),
-        },
+        params: { q: isSearch },
       };
     }
 
-    try {
-      axios
-        .get(
-          "https://kingdom-api-dev.gbempower.asia/v1/discover-content",
-          config
-        )
-        .then(function (response) {
-          setDataTable(response?.data?.data);
-          setOldData(response?.data?.data);
-          setInitialType(response?.data?.data[0]?.discover?.content_type);
-        })
-        .catch((err) => {
-          toastify(err?.response?.data?.message, "error");
-          setDataTable([]);
-        });
-      setLoading(false);
-    } catch (error) {
-      console.log(error);
-      setLoading(false);
-    }
+    await axios
+      .get("https://kingdom-api-dev.gbempower.asia/v1/discover-content", config)
+      .then(function (response) {
+        setDataTable(response?.data?.data);
+        setOldData(response?.data?.data);
+      })
+      .catch((err) => {
+        toastify(err?.message, "error");
+        setDataTable([]);
+      });
+    setLoading(false);
   };
-
-  // useEffect(() => {
-  //   getDiscover();
-  //   getDiscoverContent();
-  // }, []);
 
   useEffect(() => {
     getDiscover();
     getDiscoverContent();
-  }, [tab]);
+  }, []);
+
+  useEffect(() => {
+    getDiscover();
+    getDiscoverContent();
+  }, [isSearch]);
+
+  useEffect(() => {
+    console.log(isSearch, "isSearch");
+  }, [isSearch]);
+
+  const filters = useMemo(() => {
+    let filterByName = oldData.filter((data) => data.discover.name == tabValue);
+    return filterByName;
+  }, [tabValue, isSearch]);
+
+  useEffect(() => {
+    if (options.length > 0) setTabValue(options[0].value);
+  }, [options]);
 
   useEffect(() => {
     let MenuData = [];
@@ -150,13 +158,6 @@ export default function Index(props) {
     }
     setMenus(MenuData);
   }, [discoverType]);
-
-  useEffect(() => {
-    if (initialType) {
-      setTab(initialType);
-    }
-    console.log(initialType, "init");
-  }, [initialType]);
 
   useEffect(() => {
     if (radioValue) {
@@ -324,7 +325,7 @@ export default function Index(props) {
     await setLoading(true);
     let items = new FormData();
     if (contentType[0]?.type == "IMAGE") {
-      items.append("new_photos", fileSelected[0]);
+      if(fileSelected.length > 0) items.append("new_photos", fileSelected[0]);    
       items.append("description", "desc");
     } else if (contentType[0]?.type == "VIDEO") {
       items.append("video_link", isForm?.video_link);
@@ -371,22 +372,6 @@ export default function Index(props) {
       });
   };
 
-  const filteredItem = useMemo(() => {
-    if (dataTable?.length > 0) {
-      setDataTable(oldData);
-      if (isSearch?.length >= 3) {
-        return dataTable.filter(
-          (e) => e?.title.toLowerCase().indexOf(isSearch.toLowerCase()) !== -1
-        );
-      } else {
-        setDataTable(oldData);
-        return dataTable;
-      }
-    } else {
-      return [];
-    }
-  }, [isSearch, dataTable]);
-
   return (
     <>
       <Navbar sidebar={sidebar} setSidebar={setSidebar} />
@@ -413,8 +398,19 @@ export default function Index(props) {
           <span className="text-lg font-semibold">
             Content ({dataTable?.length})
           </span>
-          <TaskTab options={menus} value={tab} setValue={setTab}>
-            <div className="md:ml-10 w-full md:w-[50%] flex justify-between items-center flex-col md:flex-row">
+
+          <div className="flex flex-col md:flex-row w-full gap-2">
+            <div className="w-full md:w-[30%] ">
+              <DefaultSelect
+                value={tabValue}
+                setValue={setTabValue}
+                options={options}
+                isMulti={false}
+                isValueOnly={true}
+                instanceId="filterContentType"
+              />
+            </div>
+            <div className="md:ml-10 w-full md:w-[70%] flex justify-between items-center flex-col md:flex-row">
               <div className="w-full md:w-60">
                 <GlobalFilter
                   preFilteredRows={dataTable}
@@ -425,13 +421,14 @@ export default function Index(props) {
                 />
               </div>
             </div>
-          </TaskTab>
+          </div>
+
           <div className="w-full">
             <Table
               loading={loading}
               setLoading={setLoading}
               Columns={Columns}
-              items={filteredItem}
+              items={filters}
               setIsSelected={setIsSelected}
               totalPages={pageCount}
               total={dataTable.length}
@@ -561,7 +558,7 @@ export default function Index(props) {
             />
           </div>
 
-          <div className="w-full mb-5 flex flex-col ">
+          {/* <div className="w-full mb-5 flex flex-col ">
             <label htmlFor="contentType" className="font-bold text-base ">
               Content Type
             </label>
@@ -593,7 +590,7 @@ export default function Index(props) {
                 </>
               ) : null}
             </div>
-          </div>
+          </div> */}
 
           <div className="w-full mb-5 flex flex-col ">
             <label className="font-bold text-base"> Creation Date </label>

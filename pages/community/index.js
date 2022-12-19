@@ -453,9 +453,7 @@ export default function Index(props) {
                       </span>
                     </div>
                   ) : (
-                    <span className="text-base capitalize w-full ">
-                      Export as .csv
-                    </span>
+                    <span className="text-base w-full ">Export as .csv</span>
                   )}
                 </Button>
               </div>

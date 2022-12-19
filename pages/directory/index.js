@@ -79,7 +79,7 @@ const Index = (props) => {
       Footer: "Content Count",
       accessor: "contentCount",
       Cell: ({ value }) => {
-        return <span>{value ? value : "-"}</span>;
+        return <span>{value ? value : "0"}</span>;
       },
     },
     {
@@ -120,7 +120,7 @@ const Index = (props) => {
         setDataTable(res?.data?.data);
         setMeta(res?.data?.meta);
       })
-      .catch((err) => toastify(err?.message, "error"));
+      .catch((err) => console.log(err.message));
   };
 
   useEffect(() => {
@@ -256,10 +256,7 @@ const Index = (props) => {
                       <span className="font-semibold text-sm">Proccessing</span>
                     </div>
                   ) : (
-                    <span className="text-base capitalize w-full ">
-                      {" "}
-                      export as .csv{" "}
-                    </span>
+                    <span className="text-base w-full "> Export as .csv </span>
                   )}
                 </Button>
               </div>

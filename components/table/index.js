@@ -256,9 +256,7 @@ const Table = ({ items, Columns, loading, setLoading, totalPages, total }) => {
                         </select>
                       </>
                     ) : (
-                      <div className="mr-10 text-sm">
-                        Search : data tidak ditemukan...
-                      </div>
+                      <div className="mr-10 text-sm">Search : no data...</div>
                     )}
                   </div>
 

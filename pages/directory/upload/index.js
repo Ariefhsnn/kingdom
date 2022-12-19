@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import { AiOutlineEdit } from "react-icons/ai";
 import { BiLoaderAlt } from "react-icons/bi";
@@ -30,12 +30,12 @@ const Index = (props) => {
   const [tabValue, setTabValue] = useState([]);
   const [isShowEdit, setIsShowEdit] = useState(false);
   const [isForm, setIsForm] = useState({});
-  const [churchesData, setChurchesData] = useState([]);
   const [radioValue, setRadioValue] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [loadingExport, setLoadingExport] = useState(false);
   const [options, setOptions] = useState([]);
   const [categoryData, setCategoryData] = useState(null);
+  const [oldData, setOldData] = useState([]);
 
   const config = {
     headers: {
@@ -43,18 +43,6 @@ const Index = (props) => {
       Authorization: `Bearer ${token}`,
     },
   };
-
-  const Menus = [
-    {
-      name: "church",
-    },
-    {
-      name: "associate",
-    },
-    {
-      name: "chamber",
-    },
-  ];
 
   const openModalAdd = () => {
     setIsShowAdd(true);
@@ -96,16 +84,17 @@ const Index = (props) => {
       })
       .catch((err) => console.log(err, "error"));
 
-    await category.forEach((element) => {
-      categories.push({
-        ...element,
-        label: element?.name,
-        value: element?.name,
+    if (category && category.length > 0) {
+      await category.forEach((element) => {
+        categories.push({
+          ...element,
+          label: element?.name,
+          value: element?.name,
+        });
       });
-    });
 
-    setOptions(categories);
-    if (categories.length > 0) setTabValue(categories[0].value);
+      setOptions(categories);
+    }
   };
 
   useEffect(() => {
@@ -136,7 +125,7 @@ const Index = (props) => {
         .get("v1/directory", config)
         .then(function (response) {
           setDataTable(response?.data?.data);
-          // setOldData(response?.data?.data);
+          setOldData(response?.data?.data);
         })
         .catch((err) => {
           toastify(err?.response?.data?.message, "error");
@@ -150,10 +139,6 @@ const Index = (props) => {
   useEffect(() => {
     getDirectory();
   }, [isSearch]);
-
-  useEffect(() => {
-    getDirectory();
-  }, [tabValue]);
 
   const Columns = [
     {
@@ -219,6 +204,7 @@ const Index = (props) => {
       if (status == 200 || status == 201) {
         toastify(data?.message, "success");
         await getDirectory();
+        await getDirectoryCategory();
         await closeModalAdd();
       }
     } catch (error) {
@@ -229,15 +215,16 @@ const Index = (props) => {
 
   const onUpdate = async () => {
     let date = new Date(selectedTime).getTime();
-    let items = new FormData();
+    let items = new FormData();     
     items.append("name", isForm?.name);
-    items.append("directory_category_id", radioValue);
+    items.append("directory_category_id", radioValue.id);
     items.append("description", isForm?.description);
     items.append("location", isForm?.location);
     items.append("website_url", isForm?.website_url);
     items.append("phone", isForm?.phone);
     items.append("email", isForm?.email);
-    items.append("opening_hours", date);
+    if(selectedTime) items.append("opening_hours", date);
+    
 
     try {
       let res = await axios.put(`v1/directory/${isForm?.id}`, items, config);
@@ -300,10 +287,20 @@ const Index = (props) => {
         setLoadingExport(false);
       });
   };
+  useEffect(() => {
+    console.log(options, "opt");
+    console.log(oldData, "data");
+    console.log(tabValue);
+  }, [oldData, options]);
+
+  const filters = useMemo(() => {
+    let filterByName = oldData.filter((data) => data.category.name == tabValue);
+    return filterByName;
+  }, [tabValue]);
 
   useEffect(() => {
-    console.log(categoryData, "category");
-  }, [categoryData]);
+    if (options.length > 0) setTabValue(options[0].value);
+  }, [options]);
 
   return (
     <>
@@ -325,7 +322,7 @@ const Index = (props) => {
               onClick={openModalAdd}
               className="flex justify-center"
             >
-              <span className="flex justify-center"> New Category</span>
+              <span className="flex justify-center"> New Content</span>
             </Button>
           </div>
           <span className="text-lg font-semibold">
@@ -366,8 +363,8 @@ const Index = (props) => {
                       <span className="font-semibold text-sm">Proccessing</span>
                     </div>
                   ) : (
-                    <span className="text-base capitalize w-full ">
-                      export as .csv
+                    <span className="text-base w-full ">
+                      Export as .csv
                     </span>
                   )}
                 </Button>
@@ -379,6 +376,7 @@ const Index = (props) => {
               loading={loading}
               setLoading={setLoading}
               Columns={Columns}
+              // items={filters}
               items={dataTable}
               setIsSelected={setIsSelected}
               totalPages={pageCount}

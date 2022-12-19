@@ -302,10 +302,7 @@ const Index = (props) => {
                       <span className="font-semibold text-sm">Proccessing</span>
                     </div>
                   ) : (
-                    <span className="text-base capitalize w-full ">
-                      {" "}
-                      export as .csv{" "}
-                    </span>
+                    <span className="text-base w-full ">Export as .csv</span>
                   )}
                 </Button>
               </div>

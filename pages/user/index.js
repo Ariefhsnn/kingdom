@@ -226,7 +226,7 @@ const Index = (props) => {
                 className="flex justify-center"
                 onClick={onExport}
               >
-                export as .csv
+                Export as .csv
               </Button>
             </div>
           </div>
