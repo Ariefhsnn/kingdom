@@ -56,11 +56,7 @@ const Index = (props) => {
   };
 
   const openModalEdit = (items) => {
-    let time = `${new Date(Number(items?.opening_hours)).getHours()}:${
-      new Date(Number(items?.opening_hours)).getMinutes() > 9
-        ? new Date(Number(items?.opening_hours)).getMinutes()
-        : 0 + new Date(Number(items?.opening_hours)).getMinutes()
-    }`;
+    let time = new Date(items?.opening_hours).getTime()     
     setIsForm(items);
     setIsShowEdit(true);
     setRadioValue(items?.category);
