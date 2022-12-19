@@ -383,7 +383,7 @@ export default function Index(props) {
       >
         <main className="container w-full flex flex-col text-primary-500 px-5 md:px-0">
           <span className="tracking-wider text-2xl font-bold mb-10">
-            Discover / Upload
+            Discover / Upload Content
           </span>
           <span className="text-lg font-semibold"> Create </span>
           <div className="w-full md:w-40 my-5">

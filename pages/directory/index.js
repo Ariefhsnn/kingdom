@@ -77,10 +77,8 @@ const Index = (props) => {
     {
       Header: "Content Count",
       Footer: "Content Count",
-      accessor: "contentCount",
-      Cell: ({ value }) => {
-        return <span>{value ? value : "0"}</span>;
-      },
+      accessor: "directories",
+      Cell: ({ value }) => <span>{value.length}</span>,
     },
     {
       Header: "Creation date",
@@ -179,7 +177,16 @@ const Index = (props) => {
   };
 
   const onExport = async () => {
-    let date = new Date();
+    let today = new Date();
+    const yyyy = today.getFullYear();
+    let mm = today.getMonth() + 1; // Months start at 0!
+    let dd = today.getDate();
+
+    if (dd < 10) dd = '0' + dd;
+    if (mm < 10) mm = '0' + mm;
+
+    const formattedToday = yyyy + '' + mm + '' + dd
+
     await setLoadingExport(true);
     await axios({
       url: "v1/export/directory-category",
@@ -195,7 +202,7 @@ const Index = (props) => {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement("a");
         link.href = url;
-        link.setAttribute("download", `Directory-${date}.csv`);
+        link.setAttribute("download", `export-directory-${formattedToday}.csv`);
         document.body.appendChild(link);
         link.click();
         setLoadingExport(false);
@@ -217,7 +224,7 @@ const Index = (props) => {
       >
         <main className="container w-full flex flex-col text-primary-500 px-5 md:px-0">
           <span className="tracking-wider text-2xl font-bold mb-10">
-            Directory / Create
+            Directory / Create Category
           </span>
           <span className="text-lg font-semibold"> Create </span>
           <div className="w-full md:w-40 my-5">
