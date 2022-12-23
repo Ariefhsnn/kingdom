@@ -77,7 +77,7 @@ export default function Index(props) {
   const openModalEdit = (items) => {
     setIsForm(items);
     setIsShowEdit(true);
-    setSelectedUser(items?.members);
+    setSelectedUser(items?.admins);
   };
 
   const closeModalEdit = () => {
@@ -344,7 +344,7 @@ export default function Index(props) {
         ...selectedUser,
         {
           name: e?.first_name,
-          label: e?.first_name,
+          label: e?.first_name + ' ' + e?.last_name,
           user_id: e?.id,
           is_admin: 1,
         },
@@ -353,7 +353,7 @@ export default function Index(props) {
       setSelectedUser([
         {
           name: e?.first_name,
-          label: e?.first_name,
+          label: e?.first_name + ' ' + e?.last_name,
           user_id: e?.id,
           is_admin: 1,
         },
@@ -405,7 +405,7 @@ export default function Index(props) {
     // if (isSearch) {
     //   let qr = { q: isSearch || query?.q };
     //   router.replace({ pathname, query: qr });
-    // }
+    // }f
   }, [isSearch]);
 
 
@@ -639,6 +639,11 @@ export default function Index(props) {
           </div>
 
           <div className="w-full mb-5 flex flex-col gap-1">
+              <span className="font-bold text-base">Members</span>
+              <p className="">{ isForm?.members?.length } </p>
+          </div>
+
+          <div className="w-full mb-5 flex flex-col gap-1">
             <label className="font-bold text-base"> Admins </label>
             {selectedUser?.length > 0 ? (
               selectedUser?.map((e) => (
@@ -646,7 +651,7 @@ export default function Index(props) {
                   className="bg-gray-100 py-2 px-4 rounded-md text-gray-500 text-base font-semibold flex flex-row justify-between"
                   key={e?.id}
                 >
-                  <span> {e?.first_name} </span>
+                  <span> {e?.first_name + ' ' + e?.last_name} </span>
                   <button onClick={() => onRemoveAdmin(e, true)}>
                     <MdOutlineDelete className="h-5 w-5 hover:text-red-500" />
                   </button>
@@ -655,7 +660,7 @@ export default function Index(props) {
             ) : (
               <>
                 <span className="text-gray-500 italic w-full text-center text-sm font-bold">
-                  No members found
+                  No admins found
                 </span>
               </>
             )}
