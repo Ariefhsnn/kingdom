@@ -142,8 +142,26 @@ export default function Index(props) {
       });
   };
 
-  useEffect(() => {
-  }, [meta]);
+  const getUserByType = async() => {    
+    // await axios.post('v1/user/get-by-membertype', {
+    //   method: 'POST',
+    //   body: JSON.stringify({"member_type": "BUSINESS"}),      
+    // }).then((res) => console.log(res)).catch((err) => console.log(err, 'err'))
+
+    var raw = "{\n    \"member_type\": \"BUSINESS\"\n}";
+
+    var requestOptions = {
+      method: 'POST',
+      body: raw,
+      redirect: 'follow'
+    };
+
+    fetch("http://157.230.35.148:9005/v1/user/get-by-membertype", requestOptions)
+      .then(response => response.text())
+      .then(result => console.log(result))
+      .catch(error => console.log('error', error));
+
+  }
 
   useEffect(() => {
     getGroup();
@@ -152,6 +170,7 @@ export default function Index(props) {
 
   useEffect(() => {
     getGroup();
+    getUserByType()
   }, [tab]);
 
   useEffect(() => {
@@ -337,24 +356,26 @@ export default function Index(props) {
   ];
 
   const onSelectUser = (e) => {
-    let filter = userOpt.filter((element) => element?.id != e?.id);
+    let user = userOpt.filter((element) => element.id == e)
+    let filter = userOpt.filter((element) => element?.id != e);
     setUserOpt(filter);
+    console.log(user, 'user')
     if (selectedUser?.length > 0) {
       setSelectedUser([
         ...selectedUser,
         {
-          name: e?.first_name,
-          label: e?.first_name + ' ' + e?.last_name,
-          user_id: e?.id,
+          name: user[0]?.first_name,
+          label: user[0]?.first_name + ' ' + user[0]?.last_name,
+          user_id: user[0]?.id,
           is_admin: 1,
         },
       ]);
     } else {
       setSelectedUser([
         {
-          name: e?.first_name,
-          label: e?.first_name + ' ' + e?.last_name,
-          user_id: e?.id,
+          name: user[0]?.first_name,
+          label: user[0]?.first_name + ' ' + user[0]?.last_name,
+          user_id: user[0]?.id,
           is_admin: 1,
         },
       ]);
@@ -520,12 +541,12 @@ export default function Index(props) {
 
           {selectedUser?.length > 0 ? (
             <div className="w-full flex flex-col gap-2 max-h-40 overflow-auto mb-3">
-              {selectedUser?.map((e) => (
+              {selectedUser?.map((e, idx) => (
                 <div
                   className="bg-gray-50 py-2 px-4 rounded-md text-gray-500 text-sm flex items-center justify-between"
-                  key={e?.user_id}
+                  key={idx}
                 >
-                  <span className="font-bold"> {e?.name} </span>
+                  <span className="font-bold"> {e.label} </span>
                   <Button onClick={() => onRemoveAdmin(e, false)}>
                     <MdOutlineDelete className="w-5 h-5 text-gray-500 hover:text-red-500" />
                   </Button>

@@ -36,6 +36,7 @@ const Index = (props) => {
   const [options, setOptions] = useState([]);
   const [categoryData, setCategoryData] = useState(null);
   const [oldData, setOldData] = useState([]);
+  const [directoryId, setDirectoryId] = useState('')
 
   const config = {
     headers: {
@@ -55,18 +56,21 @@ const Index = (props) => {
     setRadioValue("");
   };
 
-  const openModalEdit = (items) => {
-    let time = new Date(items?.opening_hours).getTime()     
+  const openModalEdit = async(items) => {
+    let time = await new Date(+items.opening_hours).toISOString().replace('Z', '').split('T')
     setIsForm(items);
     setIsShowEdit(true);
     setRadioValue(items?.category);
-    setSelectedTime(time);
-    console.log(time);
+    setSelectedTime(time[1]);    
+    // setDirectoryId(items.category.id);
+    // setRadioValue(items.category.id)
+    console.log(items)
   };
 
   const closeModalEdit = () => {
     setIsShowEdit(false);
     setRadioValue("");
+    setDirectoryId('');
   };
 
   const getDirectoryCategory = async () => {
@@ -191,9 +195,9 @@ const Index = (props) => {
     items.append("email", isForm?.email);
     items.append("opening_hours", date);
     if (fileSelected?.length > 0) {
-      items.append("photos", fileSelected[0], `${fileSelected[0]?.name}`);
+      items.append("icon", fileSelected[0]);
     }
-
+    console.log(selectedTime, 'time')
     try {
       let res = await axios.post(`v1/directory`, items);
       let { data, status } = res;
@@ -212,6 +216,7 @@ const Index = (props) => {
   const onUpdate = async () => {
     let date = new Date(selectedTime).getTime();
     let items = new FormData();     
+    console.log(radioValue)
     items.append("name", isForm?.name);
     items.append("directory_category_id", radioValue.id);
     items.append("description", isForm?.description);
@@ -219,9 +224,18 @@ const Index = (props) => {
     items.append("website_url", isForm?.website_url);
     items.append("phone", isForm?.phone);
     items.append("email", isForm?.email);
-    if(selectedTime) items.append("opening_hours", date);
     
-
+    if (fileSelected?.length > 0) {
+      items.append("icon", fileSelected[0]);
+    }
+    if(isNaN(date)){
+      let now = new Date().toISOString().split('T')
+      let value = new Date(now[0] + 'T' + selectedTime + 'Z').getTime() 
+      items.append("opening_hours", value);
+    }else{
+      items.append("opening_hours", date);
+    }
+        
     try {
       let res = await axios.put(`v1/directory/${isForm?.id}`, items, config);
       let { data, status } = res;
@@ -231,7 +245,8 @@ const Index = (props) => {
         await getDirectory();
         await closeModalEdit();
       }
-    } catch (error) {
+    }
+     catch (error) {
       let { data } = await error?.response;
       toastify(data?.message, "error");
     }
@@ -645,14 +660,14 @@ const Index = (props) => {
             <input
               type="time"
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
-              onChange={(e) => setSelectedTime(e?.target?.value)}
-              value={selectedTime || ""}
+              onChange={(e) => setSelectedTime(e?.target?.valueAsDate)}
+              defaultValue={selectedTime || ''}              
             />
           </div>
 
           <div className="w-full mb-10">
             <label className="font-bold text-base"> Gallery </label>
-            <UploaderBox files={fileSelected} setFiles={setFileSelected} />
+            <UploaderBox files={fileSelected} setFiles={setFileSelected} preview={isForm?.icon} />
           </div>
 
           <div className="w-2/3 mx-auto flex flex-row gap-3">
