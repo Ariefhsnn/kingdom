@@ -87,14 +87,14 @@ export default function Index(props) {
     setRemoved(null);
   };
 
-  const getUser = async () => {
-    await axios
-      .get("v1/user", config)
-      .then((response) => {
-        setUserData(response?.data?.data);
-      })
-      .catch((err) => toastify(err?.message, "error"));
-  };
+  // const getUser = async () => {
+  //   await axios
+  //     .get("v1/user", config)
+  //     .then((response) => {
+  //       setUserData(response?.data?.data);
+  //     })
+  //     .catch((err) => toastify(err?.message, "error"));
+  // };
 
   useEffect(() => {
     if (!isForm?.name || !isForm?.description || fileSelected.length == 0) {
@@ -135,46 +135,43 @@ export default function Index(props) {
         setDataTable([]);
         setOldData([]);
         setLoading(false);
-        if(err.response.status !== 404){
+        if (err?.response?.status !== 404) {
           toastify(err?.message, "error");
         }
-        
       });
   };
 
-  const getUserByType = async() => {    
-    // await axios.post('v1/user/get-by-membertype', {
-    //   method: 'POST',
-    //   body: JSON.stringify({"member_type": "BUSINESS"}),      
-    // }).then((res) => console.log(res)).catch((err) => console.log(err, 'err'))
-
-    var raw = "{\n    \"member_type\": \"BUSINESS\"\n}";
-
-    var requestOptions = {
-      method: 'POST',
-      body: raw,
-      redirect: 'follow'
+  const getUserByType = async () => {
+    let configs = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     };
 
-    fetch("http://157.230.35.148:9005/v1/user/get-by-membertype", requestOptions)
-      .then(response => response.text())
-      .then(result => console.log(result))
-      .catch(error => console.log('error', error));
+    await axios
+      .post(
+        "v1/user/get-by-membertype",
+        {
+          member_type: "BUSINESS",
+        },
 
-  }
+        configs
+      )
+      .then((res) => setUserData(res?.data?.data))
+      .catch((err) => console.log(err, "err"));
+  };
 
   useEffect(() => {
     getGroup();
-    getUser();
+
+    getUserByType();
   }, []);
 
   useEffect(() => {
     getGroup();
-    getUserByType()
   }, [tab]);
 
-  useEffect(() => {
-  }, [isForm]);
+  useEffect(() => {}, [isForm]);
 
   const onDelete = async () => {
     await setLoadingDelete(true);
@@ -192,7 +189,6 @@ export default function Index(props) {
         setLoadingDelete(false);
       });
   };
-
 
   const onCreate = async () => {
     setLoading(true);
@@ -227,10 +223,6 @@ export default function Index(props) {
         setLoading(false);
       });
   };
-
-  useEffect(() => {
-
-  }, [selectedUser]);
 
   const onUpdate = async () => {
     await setLoading(true);
@@ -271,10 +263,10 @@ export default function Index(props) {
     let mm = today.getMonth() + 1; // Months start at 0!
     let dd = today.getDate();
 
-    if (dd < 10) dd = '0' + dd;
-    if (mm < 10) mm = '0' + mm;
+    if (dd < 10) dd = "0" + dd;
+    if (mm < 10) mm = "0" + mm;
 
-    const formattedToday = yyyy + '' + mm + '' + dd
+    const formattedToday = yyyy + "" + mm + "" + dd;
 
     await setLoadingExport(true);
     await axios({
@@ -356,16 +348,16 @@ export default function Index(props) {
   ];
 
   const onSelectUser = (e) => {
-    let user = userOpt.filter((element) => element.id == e)
+    let user = userOpt.filter((element) => element.id == e);
     let filter = userOpt.filter((element) => element?.id != e);
     setUserOpt(filter);
-    console.log(user, 'user')
+    console.log(user, "user");
     if (selectedUser?.length > 0) {
       setSelectedUser([
         ...selectedUser,
         {
           name: user[0]?.first_name,
-          label: user[0]?.first_name + ' ' + user[0]?.last_name,
+          label: user[0]?.first_name + " " + user[0]?.last_name,
           user_id: user[0]?.id,
           is_admin: 1,
         },
@@ -374,7 +366,7 @@ export default function Index(props) {
       setSelectedUser([
         {
           name: user[0]?.first_name,
-          label: user[0]?.first_name + ' ' + user[0]?.last_name,
+          label: user[0]?.first_name + " " + user[0]?.last_name,
           user_id: user[0]?.id,
           is_admin: 1,
         },
@@ -386,7 +378,11 @@ export default function Index(props) {
     let data = [];
     if (userData.length > 0) {
       userData.forEach((e) => {
-        data.push({ ...e, value: e?.id, label: e?.first_name });
+        data.push({
+          ...e,
+          value: e?.id,
+          label: e?.first_name + " " + e?.last_name,
+        });
       });
       setUserOpt(data);
     }
@@ -428,7 +424,6 @@ export default function Index(props) {
     //   router.replace({ pathname, query: qr });
     // }f
   }, [isSearch]);
-
 
   return (
     <>
@@ -569,11 +564,8 @@ export default function Index(props) {
             />
             {val?.length > 0 ? (
               <div className="flex flex-col">
-                {val?.map((element) => (
-                  <div
-                    className="bg-gray-50 rounded p-2 mt-2"
-                    key={element?.name}
-                  >
+                {val?.map((element, idx) => (
+                  <div className="bg-gray-50 rounded p-2 mt-2" key={idx}>
                     <span className="text-gray-500">{element?.name}</span>
                   </div>
                 ))}
@@ -660,19 +652,19 @@ export default function Index(props) {
           </div>
 
           <div className="w-full mb-5 flex flex-col gap-1">
-              <span className="font-bold text-base">Members</span>
-              <p className="">{ isForm?.members?.length } </p>
+            <span className="font-bold text-base">Members</span>
+            <p className="">{isForm?.members?.length} </p>
           </div>
 
           <div className="w-full mb-5 flex flex-col gap-1">
             <label className="font-bold text-base"> Admins </label>
             {selectedUser?.length > 0 ? (
-              selectedUser?.map((e) => (
+              selectedUser?.map((e, idx) => (
                 <div
                   className="bg-gray-100 py-2 px-4 rounded-md text-gray-500 text-base font-semibold flex flex-row justify-between"
-                  key={e?.id}
+                  key={idx}
                 >
-                  <span> {e?.first_name + ' ' + e?.last_name} </span>
+                  <span> {e?.first_name + " " + e?.last_name} </span>
                   <button onClick={() => onRemoveAdmin(e, true)}>
                     <MdOutlineDelete className="h-5 w-5 hover:text-red-500" />
                   </button>
