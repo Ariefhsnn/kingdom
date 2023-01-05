@@ -135,7 +135,7 @@ export default function Index(props) {
         setDataTable([]);
         setOldData([]);
         setLoading(false);
-        if (err?.response?.status !== 404) {
+        if (err?.status !== 404) {
           toastify(err?.message, "error");
         }
       });

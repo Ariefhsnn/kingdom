@@ -4,7 +4,7 @@ import { dateToString, toastify } from "../../../utils/useFunction";
 import { AiOutlineEdit } from "react-icons/ai";
 import { BiLoaderAlt } from "react-icons/bi";
 import Button from "../../../components/button";
-import DefaultSelect from "../../../components/select";
+import AllSelect from "../../../components/select/AllSelect";
 import { GlobalFilter } from "../../../components/table/components/GlobalFilter";
 import Layouts from "../../../components/Layouts";
 import { MdDeleteOutline } from "react-icons/md";
@@ -42,6 +42,9 @@ export default function Index(props) {
   const [loadingDelete, setLoadingDelete] = useState(false);
   const [options, setOptions] = useState([]);
   const [tabValue, setTabValue] = useState(null);
+  const [type, setType] = useState(null);
+  const [loadingExport, setLoadingExport] = useState(false);
+  
   const config = {
     headers: {
       "Content-Type": "multipart/form-data",
@@ -124,7 +127,7 @@ export default function Index(props) {
   useEffect(() => {
     getDiscover();
     getDiscoverContent();
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     getDiscover();
@@ -136,12 +139,17 @@ export default function Index(props) {
   }, [isSearch]);
 
   const filters = useMemo(() => {
-    let filterByName = oldData.filter((data) => data.discover.name == tabValue);
+    let filterByName = oldData.filter((data) => data.discover.name == tabValue.name);
+    if(filterByName.length > 0)
+    console.log(filterByName, 'filterByName')
     return filterByName;
   }, [tabValue, isSearch]);
 
   useEffect(() => {
-    if (options.length > 0) setTabValue(options[0].value);
+    if (options.length > 0) {
+      setTabValue(options[0]);   
+      setType(options[0].content_type)
+    } 
   }, [options]);
 
   useEffect(() => {
@@ -153,7 +161,6 @@ export default function Index(props) {
           id: element?.id,
           type: element.content_type,
         });
-        console.log("discover", element?.content_type);
       });
     }
     setMenus(MenuData);
@@ -165,6 +172,34 @@ export default function Index(props) {
       setContentType(filterData);
     }
   }, [radioValue]);
+
+  const onExport = async () => {
+    let date = new Date();
+    await setLoadingExport(true);
+    await axios({
+      url: "v1/export/discover-content",
+      method: "POST",
+      data: {},
+      responseType: "blob",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => {
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `Discover-Content-${date}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        setLoadingExport(false);
+      })
+      .catch((err) => {
+        toastify(err?.message, "error");
+        setLoadingExport(false);
+      });
+  };
 
   const Columns = [
     {
@@ -292,10 +327,10 @@ export default function Index(props) {
   const onUpload = async () => {
     await setLoading(true);
     let items = new FormData();
-    if (contentType[0]?.type == "IMAGE") {
+    if (type == "IMAGE") {
       items.append("photos", fileSelected[0]);
       items.append("description", "desc");
-    } else if (contentType[0]?.type == "VIDEO") {
+    } else if (type == "VIDEO") {
       items.append("video_link", isForm?.video_link);
       items.append("description", "desc");
     } else {
@@ -303,7 +338,7 @@ export default function Index(props) {
       items.append("description", isForm?.content);
     }
     items.append("title", isForm?.title);
-    items.append("discover_id", Number(radioValue));
+    items.append("discover_id", Number(tabValue.id));
 
     await axios
       .post(
@@ -372,6 +407,10 @@ export default function Index(props) {
       });
   };
 
+  useEffect(() => {
+    if(tabValue != null) setType(tabValue.content_type)
+  }, [tabValue])
+
   return (
     <>
       <Navbar sidebar={sidebar} setSidebar={setSidebar} />
@@ -401,16 +440,15 @@ export default function Index(props) {
 
           <div className="flex flex-col md:flex-row w-full gap-2">
             <div className="w-full md:w-[30%] ">
-              <DefaultSelect
+              <AllSelect
                 value={tabValue}
                 setValue={setTabValue}
                 options={options}
                 isMulti={false}
-                isValueOnly={true}
                 instanceId="filterContentType"
               />
             </div>
-            <div className="md:ml-10 w-full md:w-[70%] flex justify-between items-center flex-col md:flex-row">
+            <div className="md:ml-10 w-full md:w-[60%] flex justify-between items-center flex-col md:flex-row">
               <div className="w-full md:w-60">
                 <GlobalFilter
                   preFilteredRows={dataTable}
@@ -419,6 +457,25 @@ export default function Index(props) {
                   loading={loading}
                   setLoading={setLoading}
                 />
+              </div>
+              <div className="w-full md:w-40">
+                <Button
+                  variant="outlineBlue"
+                  className="flex justify-center"
+                  onClick={onExport}
+                  disabled={loadingExport}
+                >
+                  {loadingExport ? (
+                    <div className="flex flex-row items-center gap-2 w-full justify-center">
+                      <BiLoaderAlt className="h-5 w-5 animate-spin-slow" />
+                      <span className="font-semibold text-sm">Proccessing</span>
+                    </div>
+                  ) : (
+                    <span className="text-base w-full ">
+                      Export as .csv
+                    </span>
+                  )}
+                </Button>
               </div>
             </div>
           </div>
@@ -459,7 +516,7 @@ export default function Index(props) {
             />
           </div>
 
-          <div className="w-full mb-5 flex flex-col ">
+          {/* <div className="w-full mb-5 flex flex-col ">
             <label htmlFor="contentType" className="font-bold text-base ">
               Content Type
             </label>
@@ -491,16 +548,16 @@ export default function Index(props) {
                 </>
               ) : null}
             </div>
-          </div>
+          </div> */}
 
-          {contentType && (
+          {type && (
             <div className="w-full">
-              {contentType[0]?.type == "IMAGE"
+              {type == "IMAGE"
                 ? imageForm(false)
-                : contentType[0]?.type == "VIDEO"
+                : type == "VIDEO"
                 ? videoForm()
-                : contentType[0]?.type == "ARTICLE" ||
-                  contentType[0]?.type == "NEWS"
+                : type == "ARTICLE" ||
+                  type == "NEWS"
                 ? otherForm(false)
                 : null}
             </div>
@@ -601,12 +658,12 @@ export default function Index(props) {
 
           {contentType && (
             <div className="w-full">
-              {contentType[0]?.type == "IMAGE"
+              {type == "IMAGE"
                 ? imageForm(true)
-                : contentType[0]?.type == "VIDEO"
+                : type == "VIDEO"
                 ? videoForm(true)
-                : contentType[0]?.type == "ARTICLE" ||
-                  contentType[0]?.type == "NEWS"
+                : type == "ARTICLE" ||
+                  type == "NEWS"
                 ? otherForm(true)
                 : null}
             </div>

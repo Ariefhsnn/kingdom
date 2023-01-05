@@ -3,7 +3,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { AiOutlineEdit } from "react-icons/ai";
 import { BiLoaderAlt } from "react-icons/bi";
 import Button from "../../../components/button";
-import DefaultSelect from "../../../components/select";
+import AllSelect from "../../../components/select/AllSelect";
+import DefaultSelect from '../../../components/select'
 import { GlobalFilter } from "../../../components/table/components/GlobalFilter";
 import Layouts from "../../../components/Layouts";
 import Modal from "../../../components/modal/Modal";
@@ -27,7 +28,7 @@ const Index = (props) => {
   const [isSearch, setIsSearch] = useState("");
   const [isShowAdd, setIsShowAdd] = useState(false);
   const [fileSelected, setFileSelected] = useState([]);
-  const [tabValue, setTabValue] = useState([]);
+  const [tabValue, setTabValue] = useState('');
   const [isShowEdit, setIsShowEdit] = useState(false);
   const [isForm, setIsForm] = useState({});
   const [radioValue, setRadioValue] = useState("");
@@ -187,7 +188,7 @@ const Index = (props) => {
     let date = new Date(selectedTime).getTime();
     let items = new FormData();
     items.append("name", isForm?.name);
-    items.append("directory_category_id", categoryData?.id);
+    items.append("directory_category_id", tabValue?.id);
     items.append("description", isForm?.description);
     items.append("location", isForm?.location);
     items.append("website_url", isForm?.website_url);
@@ -202,6 +203,7 @@ const Index = (props) => {
       let res = await axios.post(`v1/directory`, items);
       let { data, status } = res;
       if (status == 200 || status == 201) {
+        setTabValue('')
         toastify(data?.message, "success");
         await getDirectory();
         await getDirectoryCategory();
@@ -305,14 +307,16 @@ const Index = (props) => {
   }, [oldData, options]);
 
   const filters = useMemo(() => {
-    let filterByName = oldData.filter((data) => data.category.name == tabValue);
+    let filterByName = oldData.filter((data) => data.category.name == tabValue.value);
     return filterByName;
   }, [tabValue]);
 
-  useEffect(() => {
-    if (options.length > 0) setTabValue(options[0].value);
-  }, [options]);
-
+  // useEffect(() => {
+  //   if (options.length > 0) setTabValue(options[0]);
+  // }, [options]);
+useEffect(() => {
+  console.log(tabValue.length, 'tabValue')
+}, [tabValue])
   return (
     <>
       <Navbar sidebar={sidebar} setSidebar={setSidebar} />
@@ -332,17 +336,18 @@ const Index = (props) => {
               variant="outlineGreen"
               onClick={openModalAdd}
               className="flex justify-center"
+              disabled={tabValue?.length == 0}
             >
               <span className="flex justify-center"> New Content</span>
             </Button>
           </div>
           <span className="text-lg font-semibold">
             {" "}
-            Category ({dataTable?.length}){" "}
+            Category ({tabValue.length != 0 ? filters?.length : dataTable?.length}){" "}
           </span>
           <div className="w-full flex flex-col md:flex-row gap-2">
             <div className="w-full md:w-[30%] ">
-              <DefaultSelect
+              <AllSelect
                 value={tabValue}
                 setValue={setTabValue}
                 options={options}
@@ -351,7 +356,7 @@ const Index = (props) => {
                 instanceId="filterContentType"
               />
             </div>
-            <div className="md:ml-10 w-full md:w-[70%] flex justify-between items-center flex-col md:flex-row gap-2">
+            <div className="md:ml-10 w-full md:w-[60%] flex justify-between items-center flex-col md:flex-row gap-2">
               <div className="w-full md:w-60">
                 <GlobalFilter
                   preFilteredRows={tab == "Churches" ? dataTable : null}
@@ -383,7 +388,20 @@ const Index = (props) => {
             </div>
           </div>
           <div className="w-full">
-            <Table
+            {tabValue.length != 0 ? (
+              <Table
+              loading={loading}
+              setLoading={setLoading}
+              Columns={Columns}
+              // items={filters}
+              items={filters}
+              setIsSelected={setIsSelected}
+              totalPages={pageCount}
+              total={total}
+              setPages={pageCount}
+            />
+            ) : (
+              <Table
               loading={loading}
               setLoading={setLoading}
               Columns={Columns}
@@ -394,6 +412,8 @@ const Index = (props) => {
               total={total}
               setPages={pageCount}
             />
+            )}
+           
           </div>
         </main>
       </Layouts>
@@ -417,7 +437,7 @@ const Index = (props) => {
             />
           </div>
 
-          <div className="w-full mb-5 flex flex-col gap-1">
+          {/* <div className="w-full mb-5 flex flex-col gap-1">
             <label htmlFor="contentType" className="font-bold text-base ">
               Content Type
             </label>
@@ -431,7 +451,7 @@ const Index = (props) => {
                 instanceId="AddContentType"
               />
             </div>
-          </div>
+          </div> */}
 
           <div className="w-full flex flex-col mb-5">
             <label htmlFor="tabName" className="font-bold text-base">

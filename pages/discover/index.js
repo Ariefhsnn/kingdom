@@ -117,6 +117,10 @@ const Index = (props) => {
       Header: "Content Type",
       Footer: "Content Type",
       accessor: "content_type",
+      Cell: ({ value }) => {
+        let val = value?.split('')[0] + value?.toLowerCase()?.substring(1)
+        return <p>{val || '-'}</p>
+      }
     },
     {
       Header: "Content Count",
@@ -285,10 +289,10 @@ const Index = (props) => {
             </Button>
           </div>
           <span className="text-lg font-semibold">
-            Tabs ({dataTable?.length})
+            Category ({dataTable?.length})
           </span>
-          <TaskTab options={Menus} value={tab} setValue={setTab}>
-            <div className="md:ml-10 w-full md:w-[80%] flex justify-between items-center flex-col md:flex-row gap-2">
+          
+            <div className=" w-full md:w-[80%] flex justify-between items-center flex-col md:flex-row gap-2">
               <div className="w-full md:w-60">
                 <GlobalFilter
                   preFilteredRows={tab == "Tab" ? dataTable : null}
@@ -316,7 +320,6 @@ const Index = (props) => {
                 </Button>
               </div>
             </div>
-          </TaskTab>
           {tab == "Tab" ? (
             <div className="w-full">
               <Table
