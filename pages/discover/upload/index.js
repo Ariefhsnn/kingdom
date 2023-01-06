@@ -422,7 +422,7 @@ export default function Index(props) {
       >
         <main className="container w-full flex flex-col text-primary-500 px-5 md:px-0">
           <span className="tracking-wider text-2xl font-bold mb-10">
-            Discover / Upload Content
+            Discover / Content
           </span>
           <span className="text-lg font-semibold"> Create </span>
           <div className="w-full md:w-40 my-5">
@@ -431,7 +431,7 @@ export default function Index(props) {
               onClick={openModalAdd}
               className="flex justify-center"
             >
-              <span className="flex justify-center"> Upload Content</span>
+              <span className="flex justify-center"> New Content</span>
             </Button>
           </div>
           <span className="text-lg font-semibold">
@@ -505,7 +505,7 @@ export default function Index(props) {
         <div className="px-10 pb-10 text-gray-700">
           <div className="w-full flex flex-col mb-5">
             <label htmlFor="tabName" className="font-bold text-base">
-              Content title
+              Title
             </label>
             <input
               type="text"
@@ -597,13 +597,13 @@ export default function Index(props) {
       <Modal
         isOpen={isShowEdit}
         closeModal={closeModalEdit}
-        title="Edit content"
+        title="Edit Content"
         sizes="small"
       >
         <div className="px-10 pb-10 text-gray-700">
           <div className="w-full flex flex-col mb-5">
             <label htmlFor="tabName" className="font-bold text-base">
-              Content title
+              Title
             </label>
             <input
               type="text"
@@ -649,13 +649,6 @@ export default function Index(props) {
             </div>
           </div> */}
 
-          <div className="w-full mb-5 flex flex-col ">
-            <label className="font-bold text-base"> Creation Date </label>
-            <span className="text-gray-500 text-base font-semibold">
-              {dateToString(isForm?.created_at)}
-            </span>
-          </div>
-
           {contentType && (
             <div className="w-full">
               {type == "IMAGE"
@@ -668,6 +661,13 @@ export default function Index(props) {
                 : null}
             </div>
           )}
+
+          <div className="w-full mb-5 flex flex-col ">
+            <label className="font-bold text-base"> Creation Date </label>
+            <span className="text-gray-500 text-base font-semibold">
+              {dateToString(isForm?.created_at)}
+            </span>
+          </div>
 
           <div className="w-full mx-auto flex flex-row gap-3">
             <Button

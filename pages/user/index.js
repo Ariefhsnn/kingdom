@@ -198,7 +198,7 @@ const Index = (props) => {
       Footer: "Member type",
       accessor: "member_type",
       Cell: ({ value }) => {
-        return <p className="capitalize">{value ? value : "-"}</p>;
+        return <p className=" red capitalize">{value ? value : "-"}</p>;
       },
     },
     {
@@ -276,7 +276,7 @@ const Index = (props) => {
       >
         <div className="px-10 pb-10 text-gray-700">
           <div className="w-full flex flex-col mb-5">
-            <label htmlFor="role"> User Role </label>
+            <label htmlFor="role"> Role </label>
             <DefaultSelect
               value={val}
               setValue={setVal}
