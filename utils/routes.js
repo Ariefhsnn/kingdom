@@ -24,7 +24,7 @@ const routes = [
       {
         url: "/discover",
         path: "/discover",
-        name: "Discover Tab",
+        name: "Discover Category",
         icon: "",
         query: {
           page: 1,
