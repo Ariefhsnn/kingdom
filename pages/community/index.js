@@ -46,7 +46,8 @@ export default function Index(props) {
   const [removed, setRemoved] = useState(null);
   const [loadingExport, setLoadingExport] = useState(false);
   const [loadingDelete, setLoadingDelete] = useState(false);
-
+  const [editOpt, setEditOpt] = useState('');
+ 
   const config = {
     headers: {
       "Content-Type": "multipart/form-data",
@@ -78,6 +79,12 @@ export default function Index(props) {
     setIsForm(items);
     setIsShowEdit(true);
     setSelectedUser(items?.admins);
+    let filter = userOpt.filter((e) => {
+      return !items?.admins?.some((element) => {
+          return e.id == element.id;
+      });
+  });
+    setEditOpt(filter);    
   };
 
   const closeModalEdit = () => {
@@ -85,6 +92,7 @@ export default function Index(props) {
     setIsForm({});
     setSelectedUser(null);
     setRemoved(null);
+    setEditOpt(userOpt);
   };
 
   // const getUser = async () => {
@@ -232,8 +240,12 @@ export default function Index(props) {
     let items = new FormData();
     let userItems = [];
     await selectedUser.forEach((e) =>
-      userItems.push({ user_id: e?.id, is_admin: 1 })
+    {
+      console.log(e, 'isi data');
+      userItems.push({ user_id: e?.id || e?.user_id, is_admin: 1 })
+    }
     );
+    console.log(userItems, 'data user')
     await items.append("name", isForm?.name);
     await items.append("description", isForm?.description);
     await items.append("new_admins", JSON.stringify(userItems));
@@ -347,10 +359,12 @@ export default function Index(props) {
     },
   ];
 
-  const onSelectUser = (e) => {
-    let user = userOpt.filter((element) => element.id == e);
-    let filter = userOpt.filter((element) => element?.id != e);
-    setUserOpt(filter);
+
+  const onSelectUser = (e, isEdit) => {
+    let user = isEdit ? editOpt.filter((element) => element.id == e) : userOpt.filter((element) => element.id == e);
+    let filter = isEdit ? editOpt.filter((element) => element?.id != e) : userOpt.filter((element) => element?.id != e);
+    isEdit ? setEditOpt(filter) : setUserOpt(filter);
+    
     console.log(user, "user");
     if (selectedUser?.length > 0) {
       setSelectedUser([
@@ -358,6 +372,8 @@ export default function Index(props) {
         {
           name: user[0]?.first_name,
           label: user[0]?.first_name + " " + user[0]?.last_name,
+          first_name: user[0]?.first_name,
+          last_name: user[0]?.last_name,
           user_id: user[0]?.id,
           is_admin: 1,
         },
@@ -367,6 +383,8 @@ export default function Index(props) {
         {
           name: user[0]?.first_name,
           label: user[0]?.first_name + " " + user[0]?.last_name,
+          first_name: user[0]?.first_name,
+          last_name: user[0]?.last_name,
           user_id: user[0]?.id,
           is_admin: 1,
         },
@@ -398,7 +416,7 @@ export default function Index(props) {
     } else {
       let filteredSelectedUser = selectedUser.filter((e) => e?.id != val?.id);
       let removedUser = selectedUser.filter((e) => e?.id == val?.id);
-      setUserOpt([...userOpt, val]);
+      setEditOpt([...editOpt, {...val, label: val?.first_name + ' ' + val?.last_name }]);
 
       setSelectedUser(filteredSelectedUser);
       if (removed != null) {
@@ -407,10 +425,6 @@ export default function Index(props) {
         setRemoved([removedUser[0]?.id]);
       }
     }
-  };
-
-  const openToast = () => {
-    toastify("test", "success");
   };
 
   useEffect(() => {
@@ -664,7 +678,7 @@ export default function Index(props) {
                   className="bg-gray-100 py-2 px-4 rounded-md text-gray-500 text-base font-semibold flex flex-row justify-between"
                   key={idx}
                 >
-                  <span> {e?.first_name + " " + e?.last_name} </span>
+                  <span> {console.log(e, 'list user')} {e?.first_name + " " + e?.last_name || e?.label} </span>
                   <button onClick={() => onRemoveAdmin(e, true)}>
                     <MdOutlineDelete className="h-5 w-5 hover:text-red-500" />
                   </button>
@@ -677,6 +691,12 @@ export default function Index(props) {
                 </span>
               </>
             )}
+            <DefaultSelect
+              value={val}
+              setValue={(e) => onSelectUser(e, true)}
+              isMulti={false}
+              options={editOpt}
+            />
           </div>
 
           {/* <div className="w-full mb-5">
