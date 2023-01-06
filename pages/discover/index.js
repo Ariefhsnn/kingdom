@@ -276,7 +276,7 @@ const Index = (props) => {
       >
         <main className="container w-full flex flex-col text-primary-500 px-5 md:px-0">
           <span className="tracking-wider text-2xl font-bold mb-10">
-            Discover / Create
+            Discover Category
           </span>
           <span className="text-lg font-semibold"> Create </span>
           <div className="w-full md:w-40 my-5">
@@ -285,7 +285,7 @@ const Index = (props) => {
               onClick={openModalAdd}
               className="flex justify-center"
             >
-              <span className="flex justify-center"> New Tab</span>
+              <span className="flex justify-center"> Create Category</span>
             </Button>
           </div>
           <span className="text-lg font-semibold">
@@ -341,13 +341,13 @@ const Index = (props) => {
       <Modal
         isOpen={isShowAdd}
         closeModal={closeModalAdd}
-        title="Create Tab"
+        title="Create Category"
         sizes="small"
       >
         <div className="px-10 pb-10 text-gray-700">
           <div className="w-full flex flex-col mb-5">
             <label htmlFor="tabName" className="font-bold text-base">
-              Tab name
+              Title
             </label>
             <input
               type="text"
@@ -439,13 +439,13 @@ const Index = (props) => {
       <Modal
         isOpen={isShowEdit}
         closeModal={closeModalEdit}
-        title="Edit Tab"
+        title="Edit Category"
         sizes="small"
       >
         <div className="px-10 pb-10 text-gray-700">
           <div className="w-full flex flex-col mb-5">
             <label htmlFor="tabName" className="font-bold text-base">
-              Tab name
+              Title
             </label>
             <input
               type="text"
@@ -509,16 +509,16 @@ const Index = (props) => {
           </div>
 
           <div className="w-full mb-5 flex flex-col gap-1">
-            <label className="font-bold text-base"> Creation Date </label>
+            <label className="font-bold text-base"> Content Count </label>
             <span className="text-gray-500 text-base font-semibold">
-              {dateToString(isForm?.created_at)}
+              {isForm?.contents?.length}
             </span>
           </div>
 
           <div className="w-full mb-5 flex flex-col gap-1">
-            <label className="font-bold text-base"> Content Count </label>
+            <label className="font-bold text-base"> Creation Date </label>
             <span className="text-gray-500 text-base font-semibold">
-              {isForm?.contents?.length}
+              {dateToString(isForm?.created_at)}
             </span>
           </div>
 
@@ -528,7 +528,7 @@ const Index = (props) => {
               className="w-1/2 flex justify-center items-center"
               onClick={onDelete}
             >
-              <span className="text-base capitalize w-full"> Delete tab </span>
+              <span className="text-base capitalize w-full"> Delete </span>
             </Button>
             <Button
               variant="primary"

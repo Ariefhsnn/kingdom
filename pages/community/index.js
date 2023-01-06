@@ -315,17 +315,17 @@ export default function Index(props) {
 
   const Columns = [
     {
-      Header: "Group name",
+      Header: "Name",
       Footer: "Group name",
       accessor: "name",
     },
     {
-      Header: "Group ID",
+      Header: "ID",
       Footer: "Group ID",
       accessor: "id",
     },
     {
-      Header: "Members",
+      Header: "Total Member",
       Footer: "Members",
       accessor: "members",
       Cell: ({ value }) => {
@@ -522,7 +522,7 @@ export default function Index(props) {
         <div className="px-10 pb-10 text-gray-700">
           <div className="w-full flex flex-col mb-5">
             <label htmlFor="groupName" className="font-bold text-base">
-              Group name
+              Name
             </label>
             <input
               type="text"
@@ -532,7 +532,7 @@ export default function Index(props) {
           </div>
           <div className="w-full flex flex-col mb-5">
             <label htmlFor="groupDescription" className="font-bold text-base">
-              Group description
+              Description
             </label>
             <textarea
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
@@ -544,7 +544,7 @@ export default function Index(props) {
           </div>
 
           <div className="w-full mb-5">
-            <label className="font-bold text-base"> Group icon </label>
+            <label className="font-bold text-base"> Icon </label>
             <UploaderBox files={fileSelected} setFiles={setFileSelected} />
           </div>
 
@@ -626,7 +626,7 @@ export default function Index(props) {
         <div className="px-10 pb-10 text-gray-700">
           <div className="w-full flex flex-col mb-5">
             <label htmlFor="groupName" className="font-bold text-base">
-              Group name
+              Name
             </label>
             <input
               type="text"
@@ -637,7 +637,7 @@ export default function Index(props) {
           </div>
           <div className="w-full flex flex-col mb-5">
             <label htmlFor="groupDescription" className="font-bold text-base">
-              Group description
+              Description
             </label>
             <textarea
               className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
@@ -666,7 +666,7 @@ export default function Index(props) {
           </div>
 
           <div className="w-full mb-5 flex flex-col gap-1">
-            <span className="font-bold text-base">Members</span>
+            <span className="font-bold text-base">Total Member</span>
             <p className="">{isForm?.members?.length} </p>
           </div>
 
@@ -687,7 +687,7 @@ export default function Index(props) {
             ) : (
               <>
                 <span className="text-gray-500 italic w-full text-center text-sm font-bold">
-                  No admins found
+                  No Admin Selected
                 </span>
               </>
             )}
@@ -740,13 +740,13 @@ export default function Index(props) {
               disabled={loadingDelete}
             >
               {loadingDelete ? (
-                <div className="flex flex-row items-center gap-2 w-full justify-center">
+                <div className="flex  flex-row items-center gap-2 w-full justify-center">
                   <BiLoaderAlt className="h-5 w-5 animate-spin-slow" />
                   <span className=" font-semibold text-sm">Proccessing</span>
                 </div>
               ) : (
                 <span className="text-base capitalize w-full">
-                  Delete Group
+                  Delete
                 </span>
               )}
             </Button>

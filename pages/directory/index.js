@@ -75,7 +75,7 @@ const Index = (props) => {
       accessor: "name",
     },
     {
-      Header: "Content Count",
+      Header: "Total Content",
       Footer: "Content Count",
       accessor: "directories",
       Cell: ({ value }) => <span>{value.length}</span>,
@@ -296,7 +296,7 @@ const Index = (props) => {
         <div className="px-10 pb-10 text-gray-700">
           <div className="w-full flex flex-col mb-5">
             <label htmlFor="tabName" className="font-bold text-base">
-              Category name
+              Name
             </label>
             <input
               type="text"
@@ -306,7 +306,7 @@ const Index = (props) => {
           </div>
 
           <div className="w-full mb-10">
-            <label className="font-bold text-base"> Category icon </label>
+            <label className="font-bold text-base"> Icon </label>
             <UploaderBox files={fileSelected} setFiles={setFileSelected} />
           </div>
 
@@ -349,7 +349,7 @@ const Index = (props) => {
         <div className="px-10 pb-10 text-gray-700">
           <div className="w-full flex flex-col mb-5">
             <label htmlFor="tabName" className="font-bold text-base">
-              Category name
+              Name
             </label>
             <input
               type="text"
@@ -357,13 +357,6 @@ const Index = (props) => {
               value={isForm?.name || ""}
               onChange={(e) => setIsForm({ ...isForm, name: e?.target?.value })}
             />
-          </div>
-
-          <div className="w-full mb-5 flex flex-col gap-1">
-            <label className="font-bold text-base"> Creation Date </label>
-            <span className="text-gray-500 text-base font-semibold">
-              {dateToString(isForm?.created_at)}
-            </span>
           </div>
 
           {/* <div className="w-full mb-5 flex flex-col gap-1">
@@ -375,7 +368,7 @@ const Index = (props) => {
 
           <div className="w-full flex flex-col mb-10 gap-5">
             <div className="w-full">
-              <label className="font-bold text-base"> Category icon </label>
+              <label className="font-bold text-base"> Icon </label>
               <UploaderBox
                 files={fileSelected}
                 setFiles={setFileSelected}
@@ -383,6 +376,14 @@ const Index = (props) => {
               />
             </div>
           </div>
+
+          <div className="w-full mb-5 flex flex-col gap-1">
+            <label className="font-bold text-base"> Creation Date </label>
+            <span className="text-gray-500 text-base font-semibold">
+              {dateToString(isForm?.created_at)}
+            </span>
+          </div>
+
 
           <div className="w-full mx-auto flex flex-row gap-3">
             <Button
@@ -397,9 +398,7 @@ const Index = (props) => {
                   <span className="font-semibold text-sm"> Proccessing </span>
                 </div>
               ) : (
-                <span className="text-base capitalize w-full">
-                  Delete Category
-                </span>
+                <span className="text-base capitalize w-full"> Delete </span>
               )}
             </Button>
             <Button

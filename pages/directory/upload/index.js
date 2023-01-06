@@ -571,13 +571,13 @@ useEffect(() => {
       <Modal
         isOpen={isShowEdit}
         closeModal={closeModalEdit}
-        title="Edit entry"
+        title="Edit Content"
         sizes="small"
       >
         <div className="px-10 pb-10 text-gray-700">
           <div className="w-full flex flex-col mb-5">
             <label htmlFor="tabName" className="font-bold text-base">
-              Organization name
+              Name
             </label>
             <input
               type="text"
@@ -589,7 +589,7 @@ useEffect(() => {
 
           <div className="w-full mb-5 flex flex-col gap-1">
             <label htmlFor="contentType" className="font-bold text-base ">
-              Content Type
+              Category
             </label>
             <div className="flex flex-col gap-2">
               <DefaultSelect
