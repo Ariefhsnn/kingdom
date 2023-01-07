@@ -23,3 +23,7 @@ export const dateToString = (date) => {
     // return new Date(date).toISOString().split("T")[0];
   }
 };
+
+export const upperCaseToCapitalize = val => {
+  return val?.split('')[0] + val?.toLowerCase()?.substring(1)
+}

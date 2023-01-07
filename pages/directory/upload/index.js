@@ -14,7 +14,7 @@ import TaskTab from "../../../components/button/TaskTab";
 import UploaderBox from "../../../components/button/UploaderBox";
 import axios from "axios";
 import { getCookie } from "../../../utils/cookie";
-import { toastify } from "../../../utils/useFunction";
+import { toastify, upperCaseToCapitalize } from "../../../utils/useFunction";
 
 const Index = (props) => {
   let { token, userId } = props;
@@ -53,7 +53,7 @@ const Index = (props) => {
   const closeModalAdd = () => {
     setIsShowAdd(false);
     setFileSelected([]);
-    setTabValue([]);
+    // setTabValue([]);
     setRadioValue("");
   };
 
@@ -300,11 +300,6 @@ const Index = (props) => {
         setLoadingExport(false);
       });
   };
-  useEffect(() => {
-    console.log(options, "opt");
-    console.log(oldData, "data");
-    console.log(tabValue);
-  }, [oldData, options]);
 
   const filters = useMemo(() => {
     let filterByName = oldData.filter((data) => data.category.name == tabValue.value);
@@ -314,9 +309,7 @@ const Index = (props) => {
   // useEffect(() => {
   //   if (options.length > 0) setTabValue(options[0]);
   // }, [options]);
-useEffect(() => {
-  console.log(tabValue.length, 'tabValue')
-}, [tabValue])
+
   return (
     <>
       <Navbar sidebar={sidebar} setSidebar={setSidebar} />
@@ -336,7 +329,7 @@ useEffect(() => {
               variant="outlineGreen"
               onClick={openModalAdd}
               className="flex justify-center"
-              disabled={tabValue?.length == 0}
+              disabled={!tabValue}
             >
               <span className="flex justify-center"> New Content</span>
             </Button>
@@ -437,11 +430,13 @@ useEffect(() => {
             />
           </div>
 
-          {/* <div className="w-full mb-5 flex flex-col gap-1">
-            <label htmlFor="contentType" className="font-bold text-base ">
-              Content Type
-            </label>
-            <div className="flex flex-col gap-2">
+            <div className="w-full mb-5 flex flex-col gap-1">
+              <label htmlFor="contentType" className="font-bold text-base ">
+                Content Type
+              </label>
+              <span >{upperCaseToCapitalize(tabValue.value)}</span>
+            </div>
+            {/* <div className="flex flex-col gap-2"> 
               <DefaultSelect
                 value={radioValue}
                 setValue={setRadioValue}

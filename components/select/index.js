@@ -16,13 +16,15 @@ export default function DefaultSelect(props) {
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
-    const defaultValues = () => {
-      let res = options?.filter(function (opt, i) {
-        return opt?.value === value;
-      });
-      setSelected(res);
-    };
-    defaultValues();
+    if(options.length > 0){
+      const defaultValues = () => {
+        let res = options?.filter(function (opt, i) {
+          return opt?.value === value;
+        });
+        setSelected(res);
+      };
+      defaultValues();
+    }    
   }, [value]);
 
   const onChange = (e) => {

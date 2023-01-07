@@ -16,6 +16,7 @@ import UploaderBox from "../../../components/button/UploaderBox";
 import axios from "axios";
 import { getCookie } from "../../../utils/cookie";
 import { useRouter } from "next/router";
+import { upperCaseToCapitalize } from "../../../utils/useFunction";
 
 export default function Index(props) {
   let { token, userId } = props;
@@ -139,16 +140,20 @@ export default function Index(props) {
   }, [isSearch]);
 
   const filters = useMemo(() => {
-    let filterByName = oldData.filter((data) => data.discover.name == tabValue.name);
-    if(filterByName.length > 0)
-    console.log(filterByName, 'filterByName')
-    return filterByName;
-  }, [tabValue, isSearch]);
+    if(tabValue){
+      let filterByName = oldData.filter((data) => data.discover.name == tabValue.name);
+      if(filterByName.length > 0)
+      console.log(filterByName, 'filterByName')
+      return filterByName;
+    }else{
+      return oldData;
+    }    
+  }, [tabValue, isSearch, dataTable]);
 
   useEffect(() => {
     if (options.length > 0) {
-      setTabValue(options[0]);   
-      setType(options[0].content_type)
+      // setTabValue(options[0]);   
+      // setType(options[0].content_type)
     } 
   }, [options]);
 
@@ -430,6 +435,7 @@ export default function Index(props) {
               variant="outlineGreen"
               onClick={openModalAdd}
               className="flex justify-center"
+              disabled={!type}
             >
               <span className="flex justify-center"> New Content</span>
             </Button>
@@ -516,11 +522,13 @@ export default function Index(props) {
             />
           </div>
 
-          {/* <div className="w-full mb-5 flex flex-col ">
-            <label htmlFor="contentType" className="font-bold text-base ">
-              Content Type
-            </label>
-            <div className="flex flex-col gap-2">
+           <div className="w-full mb-5 flex flex-col ">
+              <label htmlFor="contentType" className="font-bold text-base ">
+                Content Type
+              </label>
+              <span >{upperCaseToCapitalize(type)}</span>
+            </div>
+            {/* <div className="flex flex-col gap-2"> 
               {menus && menus.length > 0 ? (
                 <>
                   {menus.map((e) => (

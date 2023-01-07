@@ -16,6 +16,8 @@ import UploaderBox from "../../components/button/UploaderBox";
 import axios from "axios";
 import { getCookie } from "../../utils/cookie";
 import { useRouter } from "next/router";
+import { getGroupById } from '../../hooks/useGroup';
+import AllSelect from "../../components/select/AllSelect";
 
 export default function Index(props) {
   let { token } = props;
@@ -75,12 +77,17 @@ export default function Index(props) {
     setVal([]);
   };
 
-  const openModalEdit = (items) => {
-    setIsForm(items);
+  const openModalEdit = async(items) => {
     setIsShowEdit(true);
-    setSelectedUser(items?.admins);
+    let data = await getGroupById(items.id);
+    let adminUsers = []
+    data.list_admin.map((e) => {
+      adminUsers.push(e?.user); 
+    })
+    await setIsForm(data);    
+    setSelectedUser(adminUsers);
     let filter = userOpt.filter((e) => {
-      return !items?.admins?.some((element) => {
+      return !isForm?.list_admin?.some((element) => {
           return e.id == element.id;
       });
   });
@@ -165,7 +172,10 @@ export default function Index(props) {
 
         configs
       )
-      .then((res) => setUserData(res?.data?.data))
+      .then((res) => {
+        setUserData(res?.data?.data)
+        console.log(res?.data?.data, 'data user')
+      })
       .catch((err) => console.log(err, "err"));
   };
 
