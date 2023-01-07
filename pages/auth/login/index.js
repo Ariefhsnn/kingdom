@@ -24,7 +24,7 @@ export default function Login() {
   const onLogin = async () => {
     await setLoading(true);
     try {
-      const res = await axios.post("v1/auth/login", isForm, config);
+      const res = await axios.post("v1/auth/admin/login", isForm, config);
 
       let { data, status } = res;
 
