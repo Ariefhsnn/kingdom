@@ -113,7 +113,7 @@ export default function Index(props) {
     }
 
     await axios
-      .get("https://kingdom-api-dev.gbempower.asia/v1/discover-content", config)
+      .get("v1/discover-content", config)
       .then(function (response) {
         setDataTable(response?.data?.data);
         setOldData(response?.data?.data);
@@ -347,7 +347,7 @@ export default function Index(props) {
 
     await axios
       .post(
-        "https://kingdom-api-dev.gbempower.asia/v1/discover-content",
+        "v1/discover-content",
         items,
         config
       )
@@ -379,7 +379,7 @@ export default function Index(props) {
 
     await axios
       .put(
-        `https://kingdom-api-dev.gbempower.asia/v1/discover-content/${isForm?.id}`,
+        `v1/discover-content/${isForm?.id}`,
         items,
         config
       )
