@@ -102,6 +102,10 @@ export default function Index(props) {
     }
   };
 
+  useEffect(() => {
+    console.log(type, 'typee')
+  }, [type])
+
   const getDiscoverContent = async () => {
     setLoading(true);
 
@@ -319,7 +323,7 @@ export default function Index(props) {
           <textarea
             className="bg-gray-50 rounded w-full outline-none border-none focus:shadow-md focus:px-4 p-2 duration-500 text-gray-500"
             rows="4"
-            value={isForm?.content}
+            value={isForm?.description || ''}
             onChange={(e) =>
               setIsForm({ ...isForm, content: e?.target?.value })
             }
